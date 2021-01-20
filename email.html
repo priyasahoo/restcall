@@ -1,0 +1,38 @@
+<ng-template #popTemplate>
+                <div
+                  (clickOutside)="onHidePopover($event)"
+                  setfocus
+                  class="popover-default popover-shareLinkDash"
+                >
+                  <form
+                    #shareDashboardForm="ngForm"
+                    (ngSubmit)="sendLicEmail()"
+                  >
+                    <div class="popover-header">
+                      <h4
+                        class="popover-title"
+                        i18n="@@shareDashHeader"
+                        appI18nDirective
+                        [i18nParams]="'textId=shareDashHeader;'"
+                      >
+                        {{ emailLinkHeader }}
+                      </h4>
+                      <ng-container
+                        *ngTemplateOutlet="shareDashboardHeader"
+                      ></ng-container>
+                    </div>
+
+                    <div class="popover-body">
+                      <ng-container
+                        *ngTemplateOutlet="shareDashboardBody"
+                      ></ng-container>
+                    </div>
+
+                    <div class="popover-footer">
+                      <ng-container
+                        *ngTemplateOutlet="shareDashboardFooter"
+                      ></ng-container>
+                    </div>
+                  </form>
+                </div>
+              </ng-template>
