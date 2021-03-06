@@ -1,0 +1,1703 @@
+import { Injectable } from "@angular/core";
+import { Dashboard, DashboardConf } from "../../interfaces/dashboard";
+import { FilterConf } from "../../interfaces/filter";
+import { FilterBarConf } from "../../interfaces/filterbar";
+import { TimePeriodService } from "./timeperiod-service";
+import { ParametersMaintenanceService } from "../../services/drilldown/parameters-maintenance.service";
+import { FilterBarService } from "./filterbar.service";
+import { FormatTimeService } from "../../services/filterbar/formattime-service";
+import { Widget } from "../../interfaces/widget";
+import { CEMDateFilter } from "../utilities/common-utility.service";
+import { Observable, Subject } from 'rxjs';
+import { UserPreferencesServiceService } from "../user-preferences/user-preferences-service.service";
+import { isBoolean, isString } from "underscore";
+
+
+enum CEMFilterParamMap {
+  updatedValue = 'updatedValue',
+  DateFilterFormat = 'DateFilterFormat',
+  CEMDefaultDateFormat = 'YYYY-MM-DD',
+  formDate = 'form-date',
+  originalDate = 'originalDate'
+}
+@Injectable()
+export class FilterbarFactoryService {
+  private arrFilterbar: Array<FilterBarConf> = [];
+  private _filterBar;
+  private filterBarType;
+  private promises = [];
+  private filterTypes = [];
+  private dependecyMapping = {};
+  private sortedFilterByDependency: Array<FilterConf> = [];
+  private filterDependencyCount = {};
+  private tempTime: any = "";
+  public arrAllFilterPromisses: any = [];
+  private dynamicFiltersCount: any;
+  private loadedFilterList = {};
+  public arrAlldynamicFiltersCount: any = [];
+  private SelectedFilterValue: String = " ";
+  public subjectForApplyFilter = new Subject<any>();
+  public subjectApplyFilterClick = new Subject<any>();
+  private multiSelectSeparator= "";
+
+  constructor(
+    private timePeriodService: TimePeriodService,
+    private filterBarService: FilterBarService,
+    private formatTime: FormatTimeService,
+    private parametersMaintenanceService: ParametersMaintenanceService,
+    private userPreferenceService : UserPreferencesServiceService
+  ) {}
+
+  /* function to init filter bar on the bais of filterbar pojo
+     step1: process all filters and create their individual objects
+     step2: sort all the filters and keep sorted in tree structure according to their dependencies
+     stpe3: process filter values as per theier dependencies, in this process every filter will check whether it has childe filter or not.
+            if yes then it will init recursion to set child filter values. this process will be continue till the leaf node.
+            once all process will complete all promises will get resolved
+  */
+  initFilterBar(dashboard: Dashboard, objFiltebarJson: any): Promise<any> {
+    this.loadedFilterList[dashboard.pageId] = [];
+    let objFiltebar = this.constructFilterObject(objFiltebarJson);
+    let sortedFilters;
+    this.checkFilterType(objFiltebar);
+    let returnObj;
+    objFiltebar = this.processFilters(dashboard, objFiltebar);
+    this.processExtraFilter(dashboard.pageId, objFiltebar);
+    this.updateValuesFromParent(dashboard.pageId, objFiltebar);
+    sortedFilters = this.sortFilterByDependency(dashboard, objFiltebar);
+    this.setDependecyCount(dashboard, sortedFilters);
+    returnObj = this.processDynamicFilter(dashboard, sortedFilters);
+    this.getMultiSelectSeparator();
+    return returnObj;
+  }
+
+  updateValuesFromParent(dashId, filterData) {
+    const filterMap = this.parametersMaintenanceService.getMasterDashboardFilterMapForTab(
+      dashId
+    );
+    const keys = Object.keys(filterMap);
+    filterData.forEach(filter => {
+      if (keys.indexOf(filter.name) !== -1) {
+        filter.defaultValue = filterMap[filter.name];
+      }
+      if (filter.name === "timePeriod") {
+        filter.timePeriodExtraParams = filterMap;
+      }
+    });
+  }
+
+  processExtraFilter(dashId, filterData) {
+    const extraValues = Object.assign(
+      this.parametersMaintenanceService.getExtraPlotValuesForTab(dashId)
+    );
+    const plotValues = Object.assign(
+      this.parametersMaintenanceService.getPlotValuesForTab(dashId)
+    );
+    const keys = Object.keys(extraValues);
+    const plotValuesKeys = Object.keys(plotValues);
+    // code to set default values from url parameters
+    const urlParams = (<any>window).jonUrlParams || {};
+
+    const dateTimeFilters = ["datetime"];
+    const dateFilters = [CEMDateFilter.Date.toLowerCase()];
+    const urlParamTimeZone = urlParams["timeZone"] || "";
+
+    filterData.forEach(filter => {
+      if (keys.indexOf(filter.name) !== -1) {
+        filter.defaultValue = extraValues[filter.name];
+        delete extraValues[filter.name];
+      }
+
+      if (plotValuesKeys.indexOf(filter.name) !== -1) {
+        filter.defaultValue = plotValues[filter.name].toString();
+      }
+
+      // set default values from url parameters
+      if (urlParams[filter.name] !== undefined) {
+        filter.defaultValue = urlParams[filter.name].toString();
+      }
+
+      if (
+        urlParams["timeTo"] &&
+        urlParams["timeFrom"] &&
+        dateTimeFilters.indexOf(filter.name.toLowerCase()) > -1
+      ) {
+        filter.timePeriodExtraParams = filter.timePeriodExtraParams || {};
+        filter.timePeriodExtraParams["endDate"] = new Date(
+          Number(urlParams["timeTo"]) * 1000
+        );
+        filter.timePeriodExtraParams["startDate"] = new Date(
+          Number(urlParams["timeFrom"]) * 1000
+        );
+        filter.defaultValue = "Custom";
+        filter.updatedValue = "Custom";
+      }else if(urlParams[CEMDateFilter.Date] && dateFilters.indexOf(filter.name.toLowerCase()) > -1) {
+        filter.defaultValue = CEMDateFilter.Custom_Date_Value;
+        filter.updatedValue = CEMDateFilter.Custom_Date_Value;
+      }
+    });
+
+    for (const key in extraValues) {
+      if (extraValues.hasOwnProperty(key)) {
+        const flterObj = {
+          name: key,
+          displayName: key,
+          values: extraValues[key],
+          displayValues: extraValues[key],
+          defaultValue: extraValues[key],
+          type: "dropdown",
+          hidden: true,
+          isTimeperiodFilter: key === "timePeriod" || key === "timeRange_date",
+          storeAndValues: "",
+          dependencies: "",
+          dependantNames: ""
+        };
+        filterData.push(new FilterSingle(flterObj));
+      }
+    }
+  }
+
+  getMultiSelectSeparator() {
+    this.userPreferenceService.getHeaderPreference().then(result => {
+      result.forEach(pref => {
+        if (pref.field === "MultiSelectFilter") {
+          this.multiSelectSeparator = pref.preferences.separator;
+        }
+      });
+    });
+  }
+
+  // step 1
+  constructFilterObject(objFiltebarJson): any {
+    let objFiltebar = [];
+    let arrDisplayNames = (<string>objFiltebarJson.displaynames).split(",");
+    for (let i = 0; i < arrDisplayNames.length; i++) {
+      arrDisplayNames[i] =
+        arrDisplayNames[i].charAt(0).toUpperCase() +
+        arrDisplayNames[i].slice(1);
+    }
+    let arrNames = (<string>objFiltebarJson.names)
+      .split(",")
+      .map(function(val) {
+        return val.trim();
+      });
+
+    arrNames.forEach(key => {
+      if (objFiltebarJson.icons[key] !== undefined) {
+        let filter: any = objFiltebarJson.icons[key];
+        filter.name = key;
+        var index = arrNames.indexOf(key);
+        filter.displayName = arrDisplayNames[index];
+        objFiltebar.push(filter);
+      }
+    });
+    return objFiltebar;
+  }
+
+  checkFilterType(objFiltebar) {
+    let isStatic = false;
+    let isDependent = false;
+    let isDynamic = false;
+    this.dynamicFiltersCount = 0;
+    objFiltebar.forEach(filter => {
+      if (
+        filter.dependencies &&
+        filter.dependencies !== "" &&
+        filter.dependencies !== null
+      ) {
+        isDependent = true;
+      }
+      if (filter.store) {
+        isDynamic = true;
+        this.dynamicFiltersCount++;
+      }
+      if (filter.storeAndValues) {
+        let hasStore = false;
+        filter.storeAndValues.forEach(element => {
+          if (element.store) {
+            hasStore = true;
+          }
+        });
+        if (hasStore) {
+          this.dynamicFiltersCount++;
+        }
+      }
+    });
+    if (!isDynamic) {
+      isStatic = true;
+    }
+
+    if (isStatic && isDependent) {
+      this.filterBarType = "STATIC_DEPENDENT";
+    } else if (isStatic) {
+      this.filterBarType = "STATIC";
+    } else if (isDynamic && isDependent) {
+      this.filterBarType = "DYNAMIC_DEPENDENT";
+    } else if (isDynamic) {
+      this.filterBarType = "DYNAMIC";
+    }
+  }
+
+  getSingleFilterType(filter, parentFilter?: any): String {
+    let isStatic = false;
+    let isDependent = false;
+    let isDynamic = false;
+    let filterType = "";
+
+    if (filter.dependencies && filter.dependencies.length > 0) {
+      isDependent = true;
+    }
+    if (
+      filter.store ||
+      filter.objFilter.store ||
+      (filter.storeAndValues !== undefined &&
+        filter.storeAndValues[0] !== undefined &&
+        filter.storeAndValues[0]["store"] !== undefined)
+    ) {
+      isDynamic = true;
+    }
+
+    if (
+      filter.dependencies !== undefined &&
+      filter.dependencies.length > 0 &&
+      (filter.storeAndValues !== undefined &&
+        filter.storeAndValues.length > 1) &&
+      parentFilter !== undefined
+    ) {
+      const parentName = filter.dependencies[0];
+      let checkForOther = true;
+      filter.storeAndValues.forEach(store => {
+        if (store[parentName] === parentFilter.updatedValue) {
+          if (store["store"] !== undefined) {
+            isDynamic = true;
+            checkForOther = false;
+            filter.usefulStore = store;
+            return;
+          } else {
+            isDynamic = false;
+            checkForOther = false;
+            filter.usefulStore = store;
+            return;
+          }
+        }
+      });
+      if (checkForOther) {
+        filter.storeAndValues.forEach(store => {
+          if (store[parentName] === "*") {
+            if (store["store"] !== undefined) {
+              isDynamic = true;
+              filter.usefulStore = store;
+              return;
+            } else {
+              isDynamic = false;
+              filter.usefulStore = store;
+              return;
+            }
+          }
+        });
+      }
+    }
+
+    if (!isDynamic) {
+      isStatic = true;
+    }
+
+    if (isStatic && isDependent) {
+      filterType = "STATIC_DEPENDENT";
+    } else if (isStatic) {
+      filterType = "STATIC";
+    } else if (isDynamic && isDependent) {
+      filterType = "DYNAMIC_DEPENDENT";
+    } else if (isDynamic) {
+      filterType = "DYNAMIC";
+    }
+    return filterType;
+  }
+
+  processFilters(dashboard, objFiltebar: any): any[] {
+    const arrFilters: Array<any> = [];
+    objFiltebar.forEach(filter => {
+      let objFilter: FilterConf = new FilterSingle(filter);
+      arrFilters.push(objFilter);
+    });
+    this.setFilterBar(dashboard, arrFilters);
+    return arrFilters;
+  }
+
+  processStaticFilter(dashboard, objFiltebar: any): Promise<any[]> {
+    const arrFilters = this.processFilters(dashboard, objFiltebar);
+    return Promise.all(arrFilters).then(result => {
+      this.setFilterBar(dashboard, result);
+      return result;
+    });
+  }
+
+  getStaticDependentFilter(dashboard, filter, parentFilter): Promise<any> {
+    let storeNode: any = this.getValueFromStoreAndValue(
+      dashboard,
+      filter,
+      parentFilter
+    );
+    // let promises = [];
+    let promise;
+    if (storeNode.store) {
+      let parentSelectedValue =
+        parentFilter.updatedValue ||
+        parentFilter.defaultValue ||
+        parentFilter.values[0] ||
+        "";
+      let objExtraParam = {};
+      objExtraParam[parentFilter.name] = parentSelectedValue;
+      promise = new Promise((resolve, reject) => {
+        this.filterBarService
+          .getDynamicFilterValues(dashboard, filter, storeNode, objExtraParam)
+          .then(result => {
+            filter = result[0];
+
+            let arrChilds = this.getChilds(dashboard, filter);
+            this.updateLoadedFilterList(dashboard.pageId, filter.name);
+            if (arrChilds.length > 0) {
+              this.updateChildValues(dashboard, filter, arrChilds);
+            }
+            //return filter;
+            setTimeout(resolve, 100, filter);
+          });
+      });
+      // promises.push( promise1 );
+      //this.arrAllFilterPromisses.push( promise );
+    } else {
+      promise = new Promise((resolve, reject) => {
+        let storeNode: any = this.getValueFromStoreAndValue(
+          dashboard,
+          filter,
+          parentFilter
+        );
+        // console.log( `parentFilter: ${parentFilter.name} : ${parentFilter.defaultValue} => filter: ${filter.name} : ${storeNode}` );
+        if (storeNode) {
+          filter.values = storeNode.values.split(",").map(val => val.trim());
+          if (storeNode.displayValues) {
+            filter.displayValues = storeNode.displayValues
+              .split(",")
+              .map(val => val.trim());
+          } else {
+            filter.displayValues = filter.values;
+          }
+          const dependableFilters = filter.displayValues;
+          for (let x = 0; x < dependableFilters.length; x++) {
+            if (dependableFilters[x] !== filter.defaultValue) {
+              filter.updatedValue =
+                storeNode.defaultValue || filter.values[0] || "";
+            } else {
+              filter.updatedValue = filter.defaultValue;
+            }
+          }
+          const arrChilds = this.getChilds(dashboard, filter);
+          this.updateLoadedFilterList(dashboard.pageId, filter.name);
+
+          if (arrChilds.length > 0) {
+            this.updateChildValues(dashboard, filter, arrChilds);
+          }
+
+          resolve(filter);
+        } else {
+          resolve({});
+        }
+      });
+      // promises.push( promise2 );
+      //this.arrAllFilterPromisses.push( promise );
+    }
+    return promise;
+    //return Promise.all( promises );
+  }
+
+  updateChildValues(dashboard, parentFilter, arrChildFilters) {
+    arrChildFilters.forEach(filter => {
+      let filterType = this.getSingleFilterType(filter);
+      let promise;
+      switch (filterType) {
+        case "STATIC":
+        case "STATIC_DEPENDENT":
+          this.dynamicFiltersCount++;
+          this.setdynamicFiltersCount(dashboard, this.dynamicFiltersCount);
+          promise = new Promise((resolve, reject) => {
+            this.getStaticDependentFilter(dashboard, filter, parentFilter).then(
+              result => {
+                this.updateLoadedFilterList(dashboard.pageId, filter.name);
+                resolve(result);
+              }
+            );
+          });
+          // allPormises.push( promise1 );
+          // this.arrAllFilterPromisses.push( promise );
+
+          this.setPromise(dashboard, promise);
+
+          break;
+        case "DYNAMIC":
+        case "DYNAMIC_DEPENDENT":
+          let parentSelectedValue =
+            parentFilter.updatedValue ||
+            parentFilter.defaultValue ||
+            parentFilter.values[0] ||
+            "";
+          if (this.checkForParents(dashboard.pageId, filter)) {
+            let objExtraParam = {};
+            // objExtraParam[ parentFilter.name ] = parentSelectedValue;
+            objExtraParam = this.getParentsValues(dashboard, filter);
+            promise = new Promise((resolve, reject) => {
+              this.filterBarService
+                .getDynamicFilterValues(
+                  dashboard,
+                  filter,
+                  filter.objFilter,
+                  objExtraParam
+                )
+                .then(result => {
+                  filter = result[0];
+                  let arrChilds = this.getChilds(dashboard, filter);
+                  this.updateLoadedFilterList(dashboard.pageId, filter.name);
+                  if (arrChilds.length > 0) {
+                    this.updateChildValues(dashboard, filter, arrChilds);
+                  }
+                  setTimeout(resolve, 100, result); //return result;
+                });
+            });
+            //allPormises.push( promise2 );
+            // this.arrAllFilterPromisses.push( promise );
+            this.setPromise(dashboard, promise);
+          }
+          break;
+      }
+    });
+  }
+  checkForParents(dashId, filter) {
+    const dependencies = filter.dependencies || [];
+    let parentsLoaded = true;
+    console.log(filter.name);
+    dependencies.forEach(element => {
+      if (this.loadedFilterList[dashId].indexOf(element) < 0) {
+        parentsLoaded = false;
+        console.log("inside if", filter.name);
+      }
+    });
+    return parentsLoaded;
+  }
+  random() {
+    return Math.floor(Math.random() * 100) + 1;
+  }
+
+  // function to get timeperiod values in the form of "timeFrom":"...", "timeTo":"..."
+  // @dashboard: current dashboard's object
+  getTimePeriodFilterValue(dashboard) {
+    const filterbar: any = this.getFilterBar(dashboard.pageId);
+    let objFilterValues: any = {};
+    filterbar.forEach((filter: FilterConf) => {
+      if (filter.isTimeperiodFilter === true) {
+        objFilterValues = this.handleTimePeriodCalculation(filter, dashboard);
+      }
+    });
+    const timezone = this.timePeriodService.getTimeZoneForAPM();
+    const objTimeZone = { clientTimeZone: timezone };
+    objFilterValues = { ...objFilterValues, ...objTimeZone };
+    return objFilterValues;
+  }
+
+  // get values of parent filters those are defined as dependencies in child filters
+  // @objDashboard: current dashboard's object
+  // @objFilter: child the filter's object for which need to get the values of respective parent filters
+  getParentsValues(objDashboard, objFilter): any {
+    const arrParents = this.getParents(objDashboard, objFilter);
+    let objExtraparam = {};
+    let filterVal = "";
+    arrParents.forEach((filter, index) => {
+      filterVal = this.getFilterVal(objDashboard, filter.name);
+      if(this.isMultiSelectFilter(filter)){
+        if(Array.isArray(filterVal)){
+          if(filterVal.length>1){
+            filterVal =  filterVal.join(this.multiSelectSeparator);
+          } else if(filterVal.length === 1) {
+            filterVal = filterVal.join();
+          }
+        }
+      }
+      if (filterVal !== undefined && filterVal !== "") {
+        objExtraparam[filter.name + ""] = filterVal;
+      }
+    });
+
+    const objTimePeriodValues = this.getTimePeriodFilterValue(objDashboard);
+    objExtraparam = { ...objExtraparam, ...objTimePeriodValues };
+    return objExtraparam;
+  }
+
+  processDynamicFilter(dashboard, objSortedFilters: any): Promise<any[]> {
+    // this.arrAllFilterPromisses = [];
+    this.clearPromises(dashboard);
+
+    // update parent value first
+    objSortedFilters.forEach((filter, index) => {
+      //check is parent
+      let arrParents = this.getParents(dashboard, filter);
+      if (arrParents.length > 0) {
+        return;
+      }
+
+      let filterType = this.getSingleFilterType(filter);
+      let returnObj;
+      let promise;
+      switch (filterType) {
+        case "STATIC":
+        case "STATIC_DEPENDENT":
+          this.dynamicFiltersCount++;
+          this.setdynamicFiltersCount(dashboard, this.dynamicFiltersCount);
+          promise = new Promise((resolve, reject) => {
+            this.updateLoadedFilterList(dashboard.pageId, filter.name);
+            let arrChilds = this.getChilds(dashboard, filter);
+            if (arrChilds.length > 0) {
+              this.updateChildValues(dashboard, filter, arrChilds);
+            }
+            resolve(filter);
+            //setTimeout(resolve, 100, filter);
+          });
+          // allPormises.push( promise1 );
+          // this.arrAllFilterPromisses.push( promise );
+
+          this.setPromise(dashboard, promise);
+
+          break;
+        case "DYNAMIC":
+        case "DYNAMIC_DEPENDENT":
+          promise = new Promise((resolve, reject) => {
+            this.filterBarService
+              .getDynamicFilterValues(dashboard, filter, filter.objFilter)
+              .then(result => {
+                filter = result[0];
+                let selectedValue =
+                  filter.updatedValue ||
+                  filter.defaultValue ||
+                  filter.values[0] ||
+                  "";
+                let arrChilds = this.getChilds(dashboard, filter);
+                this.updateLoadedFilterList(dashboard.pageId, filter.name);
+                if (arrChilds.length > 0) {
+                  this.updateChildValues(dashboard, filter, arrChilds);
+                }
+                //return filter;
+                setTimeout(resolve, 100, filter);
+                //resolve( filter );
+              });
+          });
+          // allPormises.push( promise2 );
+          // this.arrAllFilterPromisses.push( promise );
+
+          this.setPromise(dashboard, promise);
+
+          break;
+      }
+
+      //filter.defaultValue = updatedValue;
+    });
+
+    let finalPromise: Promise<any> = new Promise((resolve, reject) => {
+      const clearAllPromises = () => {
+        const promises = this.getPromise(dashboard);
+        // Promise.all( this.arrAllFilterPromisses ).then( (filters) => {
+        Promise.all(promises).then(filters => {
+          // update the original filter on the basis of dependecies changes
+          let objFilters: any = this.getFilterBar(dashboard.pageId);
+          objFilters.map(outerFilter => {
+            let updatedFilter;
+            objSortedFilters.forEach(innerFilter => {
+              if (innerFilter.name === outerFilter.name) {
+                updatedFilter = innerFilter;
+              }
+            });
+            return updatedFilter;
+          });
+          this.setFilterBar(dashboard, objFilters);
+          resolve(objFilters);
+        });
+      };
+
+      const filterDependencyCount = this.getdynamicFiltersCount(dashboard);
+
+      const promisInterval = setInterval(() => {
+        const promises = this.getPromise(dashboard) || [];
+        if (promises.length >= filterDependencyCount) {
+          // console.log( 'on promiss complete >> ' + this.arrAllFilterPromisses.length + '>' + objSortedFilters.length );
+          clearInterval(promisInterval);
+          clearAllPromises();
+        }
+      }, 2000);
+    });
+    return finalPromise;
+  }
+
+  clearLoadedFilterList(dashboardPageId) {
+    this.loadedFilterList[dashboardPageId] = [];
+  }
+
+  setDependecyCount(dashboard, objSortedFilters: any) {
+    let dependencyCount = 0;
+    const searchForChild = (objDashboard, parentFilter, arrChildFilters) => {
+      arrChildFilters.forEach(filter => {
+        dependencyCount++;
+        const arrChilds = this.getChilds(objDashboard, filter);
+        if (arrChilds.length > 0 && dependencyCount < 100) {
+          searchForChild(dashboard, filter, arrChilds);
+        }
+      });
+    };
+
+    objSortedFilters.forEach(filter => {
+      // check parent count
+      const arrParents = this.getParents(dashboard, filter);
+      if (arrParents.length > 0) {
+        return;
+      }
+
+      dependencyCount++;
+      const arrChilds = this.getChilds(dashboard, filter);
+      if (arrChilds.length > 0 && dependencyCount < 100) {
+        searchForChild(dashboard, filter, arrChilds);
+      }
+    });
+    this.filterDependencyCount[dashboard.pageId] = dependencyCount;
+  }
+
+  getDependencyCount(dashboard) {
+    return this.filterDependencyCount[dashboard.pageId] || 0;
+  }
+
+  processStaticDependencies(
+    dashboard: Dashboard,
+    arrFilters,
+    parentFilter?: any
+  ) {
+    arrFilters.forEach(parentFilter => {
+      let arrChilds: any = this.getChilds(dashboard, parentFilter);
+      if (arrChilds.length > 0) {
+        arrChilds.forEach(filter => {
+          let storeNode: any = this.getValueFromStoreAndValue(
+            dashboard,
+            filter,
+            parentFilter
+          );
+          console.log(
+            `parentFilter: ${parentFilter.name} : ${parentFilter.defaultValue} => filter: ${filter.name} : ${storeNode}`
+          );
+          filter.values = storeNode.values.split(",").map(val => val.trim());
+          if (storeNode.displayValues) {
+            filter.displayValues = storeNode.displayValues
+              .split(",")
+              .map(val => val.trim());
+          } else {
+            filter.displayValues = filter.values;
+          }
+          filter.defaultValue =
+            storeNode.defaultValue || filter.values[0] || "";
+
+          //upadate value in arrFilters object
+          arrFilters.forEach(innerParentfilter => {
+            if (innerParentfilter.name == filter.name) {
+              innerParentfilter.values = filter.values;
+              innerParentfilter.displayValues = filter.displayValues;
+              innerParentfilter.defaultValue = filter.defaultValue;
+            }
+          });
+        });
+      }
+    });
+
+    // update the original filter on the basis of dependecies changes
+    let objFilters: any = this.getFilterBar(dashboard.pageId);
+    objFilters.map(outerFilter => {
+      let updatedFilter;
+      arrFilters.forEach(innerFilter => {
+        if (innerFilter.name === outerFilter.name) {
+          updatedFilter = innerFilter;
+        }
+      });
+      return updatedFilter;
+    });
+    this.setFilterBar(dashboard, objFilters);
+
+    return Promise.all(objFilters);
+  }
+
+  // step 2
+  /* function to sort the filter in tree structure according to their dependencies
+    @dashboard: Current dashboard object
+    @filters: Array of filters objects
+  */
+  sortFilterByDependency(dashboard, filters): any {
+    let sortedFilters = [];
+    let sortIndependentFilters = false;
+    let loopLimitCounter = 1000;
+    let loopCounter = 0;
+    do {
+      loopCounter++;
+      // get independent filters first
+      if (sortIndependentFilters === false) {
+        filters.forEach(filter => {
+          let arrParents = this.getParents(dashboard, filter);
+          if (arrParents.length === 0) {
+            sortedFilters.push(filter);
+          }
+        });
+        sortIndependentFilters = true;
+      }
+
+      // get dependent filters
+      if (sortIndependentFilters === true) {
+        sortedFilters.forEach(parentFilter => {
+          let arrChilds = this.getChilds(dashboard, parentFilter);
+          if (arrChilds.length > 0) {
+            arrChilds.forEach(childFilter => {
+              //check duplicate then push
+              let duplicate = false;
+              sortedFilters.forEach(sortedFilter => {
+                if (sortedFilter.name === childFilter.name) {
+                  duplicate = true;
+                  return false;
+                }
+              });
+              if (!duplicate) {
+                sortedFilters.push(childFilter);
+              }
+            });
+          }
+        });
+      }
+    } while (
+      sortedFilters.length < filters.length &&
+      loopCounter <= loopLimitCounter
+    );
+    this.setSortFilterByDependency(dashboard, sortedFilters);
+    return sortedFilters;
+  }
+
+  // function  written to update the value of filter on changes and update value of dependent filters
+  // @dashboard: current dashboard's object
+  // @filter: current changed filter
+  // @updatedValue: updated value of current filter
+  updateFilterByDependency(dashboard, filter, updatedValue): Promise<any> {
+    let parentFilterCurrentUpdated = filter;
+    let objSortedFilters: any = this.getSortFilterByDependency(dashboard);
+    let updateParentValue = false;
+    let allPormises = [];
+    let totlaEffectedFilters = 0;
+
+    const getStaticDependentFilter = (
+      dashboard,
+      filter,
+      parentFilter
+    ): Promise<any> => {
+      let storeNode: any = this.getValueFromStoreAndValue(
+        dashboard,
+        filter,
+        parentFilter
+      );
+      // let promises = [];
+      let promise;
+      if (storeNode.store) {
+        let parentSelectedValue =
+          parentFilter.updatedValue ||
+          parentFilter.defaultValue ||
+          parentFilter.values[0] ||
+          "";
+        let objExtraParam = {};
+        objExtraParam[parentFilter.name] = parentSelectedValue;
+        promise = new Promise((resolve, reject) => {
+          this.filterBarService
+            .getDynamicFilterValues(dashboard, filter, storeNode, objExtraParam)
+            .then(result => {
+              filter = result[0];
+
+              let arrChilds = this.getChilds(dashboard, filter);
+              this.updateLoadedFilterList(dashboard.pageId, filter.name);
+              if (arrChilds.length > 0) {
+                updateChildValues(dashboard, filter, arrChilds);
+              }
+
+              //return filter;
+              setTimeout(resolve, 100, filter);
+            });
+        });
+        // promises.push( promise1 );
+        //this.arrAllFilterPromisses.push( promise );
+      } else {
+        promise = new Promise((resolve, reject) => {
+          // console.log( `parentFilter: ${parentFilter.name} : ${parentFilter.defaultValue} => filter: ${filter.name} : ${storeNode}` );
+          if (storeNode) {
+            filter.values = storeNode.values
+              ? storeNode.values.split(",").map(val => val.trim())
+              : [];
+            if (storeNode.displayValues) {
+              filter.displayValues = storeNode.displayValues
+                .split(",")
+                .map(val => val.trim());
+            } else {
+              filter.displayValues = filter.values;
+            }
+            const dependableFilters = filter.displayValues;
+            for (let x = 0; x < dependableFilters.length; x++) {
+              if (dependableFilters[x] !== filter.defaultValue) {
+                filter.updatedValue =
+                  storeNode.defaultValue || filter.values[0] || "";
+              } else {
+                filter.updatedValue = filter.defaultValue;
+              }
+            }
+            const arrChilds = this.getChilds(dashboard, filter);
+            this.updateLoadedFilterList(dashboard.pageId, filter.name);
+            if (arrChilds.length > 0) {
+              updateChildValues(dashboard, filter, arrChilds);
+            }
+            resolve(filter);
+          } else {
+            resolve({});
+          }
+        });
+        // promises.push( promise2 );
+        //this.arrAllFilterPromisses.push( promise );
+      }
+      return promise;
+      //return Promise.all( promises );
+    };
+
+    const updateChildValues = (dashboard, parentFilter, arrChildFilters) => {
+      arrChildFilters.forEach(filter => {
+        totlaEffectedFilters++;
+        let filterType = this.getSingleFilterType(filter, parentFilter);
+        let promise;
+
+        switch (filterType) {
+          case "STATIC":
+          case "STATIC_DEPENDENT":
+            promise = getStaticDependentFilter(dashboard, filter, parentFilter);
+            allPormises.push(promise);
+            break;
+          case "DYNAMIC":
+          case "DYNAMIC_DEPENDENT":
+            if (this.checkForParents(dashboard.pageId, filter)) {
+              const objExtraParam = this.getParentsValues(dashboard, filter);
+              promise = this.filterBarService
+                .getDynamicFilterValues(
+                  dashboard,
+                  filter,
+                  filter.objFilter,
+                  objExtraParam
+                )
+                .then(result => {
+                  filter = result[0];
+                  let arrChilds = this.getChilds(dashboard, filter);
+                  this.updateLoadedFilterList(dashboard.pageId, filter.name);
+                  if (arrChilds.length > 0) {
+                    updateChildValues(dashboard, filter, arrChilds);
+                  }
+                  return result;
+                });
+              allPormises.push(promise);
+            }
+            break;
+        }
+      });
+    };
+
+    // update parent value first
+    objSortedFilters.forEach(filter => {
+      if (filter.name === parentFilterCurrentUpdated.name) {
+        let promise = new Promise((resolve, reject) => {
+          totlaEffectedFilters++;
+          filter.updatedValue = updatedValue;
+
+          // on custom time period get custom start and end dates
+          if (parentFilterCurrentUpdated.timePeriodExtraParams) {
+            filter.timePeriodExtraParams =
+              parentFilterCurrentUpdated.timePeriodExtraParams;
+          }
+
+          let arrChilds = this.getChilds(dashboard, filter);
+          this.updateLoadedFilterList(dashboard.pageId, filter.name);
+          if (arrChilds.length > 0) {
+            updateChildValues(dashboard, filter, arrChilds);
+          }
+          resolve(filter);
+        });
+        allPormises.push(promise);
+      }
+    });
+
+    //console.log( 'totlaEffectedFilters >>>>>>' + totlaEffectedFilters );
+    let finalPromise: Promise<any> = new Promise((resolve, reject) => {
+      let clearAllPromises = () => {
+        Promise.all(allPormises).then(filters => {
+          // update the original filter on the basis of dependecies changes
+          let objFilters: any = this.getFilterBar(dashboard.pageId);
+          objFilters.map(outerFilter => {
+            let updatedFilter;
+            objSortedFilters.forEach(innerFilter => {
+              if (innerFilter.name === outerFilter.name) {
+                updatedFilter = innerFilter;
+              }
+            });
+            return updatedFilter;
+          });
+          this.setFilterBar(dashboard, objFilters);
+          // return objFilters;
+
+          // setTimeout(resolve, 100, filter);
+          resolve(objFilters);
+        });
+      };
+
+      let promisInterval = setInterval(() => {
+        if (allPormises.length === totlaEffectedFilters) {
+          clearInterval(promisInterval);
+          clearAllPromises();
+        }
+      }, 1500);
+    });
+    return finalPromise;
+  }
+
+  setSortFilterByDependency(dashboard: Dashboard, objSortedFilters) {
+    this.sortedFilterByDependency[dashboard.pageId] = objSortedFilters;
+  }
+
+  getSortFilterByDependency(dashboard: Dashboard) {
+    return this.sortedFilterByDependency[dashboard.pageId];
+  }
+
+  getChilds(dashboard, parentFilter) {
+    let objFilters: any = this.getFilterBar(dashboard.pageId);
+    let arrChilds = [];
+    objFilters.forEach(filter => {
+      filter.dependencies.forEach(dependency => {
+        if (parentFilter.name === dependency) {
+          arrChilds.push(filter);
+        }
+      });
+    });
+    return arrChilds;
+  }
+
+  getParents(dashboard, filter) {
+    let arrParentNames = filter.dependencies || [];
+    let arrParents = [];
+    arrParentNames.forEach(filterName => {
+      let objFilter = this.getFilter(dashboard, filterName);
+      arrParents.push(objFilter);
+    });
+    return arrParents;
+  }
+
+  processDynamicDependentFilter(dashboard: Dashboard) {}
+
+  processDependencyMapping(dashboard: Dashboard, objFiltebar) {
+    let dependencyMapping = this.getDependencyMapping(dashboard) || [];
+    objFiltebar.forEach(filter => {
+      if (filter.dependencies) {
+        filter.dependencies.forEach(dependency => {
+          let dependent = dependencyMapping[filter.dependency] || [];
+          dependent.push(filter.name);
+          dependencyMapping[filter.dependency] = dependent;
+        });
+      }
+    });
+    this.setDependencyMapping(dashboard, dependencyMapping);
+  }
+
+  getValueFromStoreAndValue(dashboard, filter, objParent) {
+    let parentVal = this.getFilterVal(dashboard, objParent.name);
+    let storeValue = "";
+    let time = "";
+    let filterStore = {};
+    if (filter.usefulStore !== undefined) {
+      filterStore = filter.usefulStore;
+    } else {
+      filterStore = filter.storeAndValues[0];
+    }
+    // const displayValue = filterStore['displayValues'] || filterStore['values'];
+    // if ( displayValue.indexOf('12:00 AM') !== -1 ) {
+    //   time = displayValue.indexOf('12:00 AM');
+    //   this.tempTime = displayValue.substr(0, time) + '00:00 AM';
+    // }
+    // const storeValues = this.tempTime.split(',');
+    // for (const i in storeValues) {
+    //   if (storeValues !== undefined) {
+    //     const values = storeValues[i].split(':');
+    //     if (values[0].indexOf('0') === 0) {
+    //       storeValues[i] = storeValues[i].substr(1);
+    //     }
+    //   }
+    // }
+    // let tempTimeString = '';
+    // const index = 0;
+    // storeValues.forEach((element, i) => {
+    //   if (i !== storeValues.length - 1) {
+    //     tempTimeString = tempTimeString + element + ',';
+    //   } else {
+    //     tempTimeString = tempTimeString + element;
+    //   }
+    // });
+    // filterStore['displayValues'] = tempTimeString;
+
+    // if (filterStore["displayValues"].split(":")[0].ind) {
+    //   console.log(filterStore["displayValues"].substr(0));
+    // }
+    filter.storeAndValues.forEach(storeNode => {
+      if (storeNode[objParent.name] === parentVal) {
+        storeValue = storeNode;
+      }
+    });
+
+    // if store and values not found then try searching for *
+    if (storeValue == "" && filter.storeAndValues.length > 0) {
+      filter.storeAndValues.forEach(storeNode => {
+        if (storeNode[objParent.name] === "*") {
+          storeValue = storeNode;
+        }
+      });
+    }
+    return storeValue;
+  }
+
+  setDependencyMapping(dashboard: Dashboard, dependecyMapping) {
+    this.dependecyMapping[dashboard.pageId] = dependecyMapping;
+  }
+
+  getDependencyMapping(dashboard: Dashboard) {
+    return this.dependecyMapping[dashboard.pageId];
+  }
+
+  setFilterType(dashboard, type) {
+    this.filterTypes[dashboard.pageId] = type;
+  }
+
+  getFilterType(dashboard) {
+    return this.filterTypes[dashboard.pageId];
+  }
+
+  setFilterBar(dashboard: Dashboard, filterbar: Array<FilterConf>) {
+    this.arrFilterbar[dashboard.pageId] = filterbar;
+  }
+
+  /* function to get whole filterbar for the dashboard
+    @dashboard: current dashboard
+  */
+  getFilterBar(dashboardPageId: any): FilterBarConf {
+    return this.arrFilterbar[dashboardPageId];
+  }
+
+  /* function to get object of single filter
+    @dashboard: current dashboard
+    @filterName: filter name
+  */
+  getFilter(dashboard: Dashboard, filterName) {
+    let filters: any = this.getFilterBar(dashboard.pageId);
+    let objFilter;
+    filters.forEach((filter: FilterConf) => {
+      if (filter.name === filterName) {
+        objFilter = filter;
+      }
+    });
+    return objFilter;
+  }
+  formatDate(date) {
+    const d = new Date(date);
+    let month = "" + (d.getMonth() + 1);
+    let day = "" + d.getDate();
+    const year = d.getFullYear();
+
+    if (month.length < 2) {
+      month = "0" + month;
+    }
+    if (day.length < 2) {
+      day = "0" + day;
+    }
+
+    return [year, month, day].join("-");
+  }
+  getTimeForIcam(date) {
+    const d = new Date(date);
+    let hours = "" + d.getHours();
+    let minute = "" + d.getMinutes();
+    let sec = "" + d.getSeconds();
+
+    if (hours.length < 2) {
+      hours = "0" + hours;
+    }
+    if (minute.length < 2) {
+      minute = "0" + minute;
+    }
+    if (sec.length < 2) {
+      sec = "0" + sec;
+    }
+    return hours + ":" + minute + ":" + sec + ".000";
+  }
+
+  /* function to get value of single filter
+    @dashboard: Current dashboard
+    @filterName: fitler name
+  */
+  getFilterVal(dashboard: Dashboard, filterName: string) {
+    let filters: any = this.getFilterBar(dashboard.pageId);
+    let objFilter;
+    filters.forEach((filter: FilterConf) => {
+      if (filter.name === filterName) {
+        objFilter = filter;
+      }
+    });
+    let selectedValue =
+      objFilter.updatedValue || objFilter.defaultValue || objFilter.values[0];
+    return selectedValue;
+  }
+
+  /* function to get updated value of filters according to type
+    @filter: filter object
+  */
+  getFilterValuesObject(dashboard) {
+    const filterbar: any = this.getFilterBar(dashboard.pageId);
+    if (filterbar === undefined) {
+      return undefined;
+    }
+    let objFilterValues: any = {};
+    filterbar.forEach((filter: FilterConf) => {
+      let objFilter;
+      if (filter.isTimeperiodFilter === true) {
+        objFilter = this.handleTimePeriodCalculation(filter, dashboard);
+      } else {
+        switch (filter.type) {
+          case "dropdown":
+            objFilter = this.getFilterValueDropDown(filter);
+            break;
+          case "textbox":
+            objFilter = this.getFilterValueTextBox(filter);
+            break;
+          case "datepicker":
+            objFilter = this.getFilterValueDatePicker(filter);
+            break;
+        }
+      }
+      objFilterValues = { ...objFilterValues, ...objFilter };
+    });
+    if (objFilterValues.hasOwnProperty("Datetime")) {
+      if (objFilterValues["Datetime"] === "Custom") {
+        // objFilterValues['timeRange_date'] = this.formatDate(objFilterValues.formattedTimeFrom);
+        // objFilterValues['timeRange_time'] = this.getTimeForIcam(objFilterValues.formattedTimeFrom);
+        // objFilterValues['timeRange_interval'] = objFilterValues.interval;
+        const timeTo = Number(objFilterValues.timeTo) * 1000;
+        const timeFrom = Number(objFilterValues.timeFrom) * 1000;
+        const timediff = timeTo - timeFrom;
+        // console.log('ISO Date is:',this.formatTime.objMoment(timeFrom).format('YYYY-MM-DDTHH:mm:ss.SSS'));
+        objFilterValues["Datetime"] = this.formatTime
+          .objMoment(timeTo)
+          .format("YYYY-MM-DDTHH:mm:ss.SSS");
+        // console.log('Interval Minutes are:',Math.floor(timediff / (1000 * 60 )));
+        // objFilterValues['timeRange_interval'] = '-' + Math.floor(timediff / (1000 * 60 )) + 'm';
+        const days = Math.floor(timediff / (1000 * 60 * 60 * 24));
+        const reminderDays = timediff % (1000 * 60 * 60 * 24);
+        const hrs = Math.floor(reminderDays / (1000 * 60 * 60));
+        const reminderhrs = Math.floor(reminderDays % (1000 * 60 * 60));
+        const min = Math.floor(reminderhrs / (1000 * 60));
+        // objFilterValues['timeRange_interval'] = '-' + days + 'd' + hrs + 'h' + min + 'm' ;
+        // objFilterValues['interval'] = '-' + days + 'd' + hrs + 'h' + min + 'm' ;
+      } else if (
+        objFilterValues["Datetime"] === "CURRENT_DATE" ||
+        objFilterValues["Datetime"] === "CURRENT_TIME"
+      ) {
+        // objFilterValues['timeRange_time'] = 'CURRENT_TIME';
+        objFilterValues["Datetime"] = "CURRENT_TIME";
+      }
+    }
+    const timezone = this.timePeriodService.getTimeZoneForAPM();
+    const objTimeZone = { clientTimeZone: timezone };
+    objFilterValues = { ...objFilterValues, ...objTimeZone };
+    return objFilterValues;
+  }
+
+  /* function to get updated value of dropdown filter
+    @filter: filter object
+  */
+  getFilterValueDropDown(filter: FilterConf) {
+    let filterValue = {};
+    let formattedValue;
+    let filterSelectedValue =
+      filter.updatedValue || filter.defaultValue || filter.values[0] || "";
+    if ((<any>window).scheduler) {
+      filterSelectedValue = filter.defaultValue;
+    }
+    if (filterSelectedValue === undefined || filterSelectedValue === null) {
+      filterSelectedValue = "";
+    }
+    filter.values.forEach((value, index) => {
+      if (filterSelectedValue === value) {
+        if (filterSelectedValue === "None") {
+          filterValue[filter.name] = "";
+          filterValue[`${filter.name}-DisplayedValue`] = "None";
+        } else {
+          filterValue[filter.name] = value;
+          let displayValue = "";
+          if (
+            filter.displayValues[index] !== undefined &&
+            filter.displayValues[index] !== null
+          ) {
+            if (
+              filter.displayValues[0] === "Current Time" ||
+              filter.displayValues[0] === "Current Date"
+            ) {
+              // formattedValue = this.formatTime.objMoment( filter.displayValues[index]  ).format('MMM DD, YYYY');
+              /*Excel on change of time filter date format was displaying  */
+              if (filter.displayValues[0] === "Current Date") {
+                formattedValue = this.formatTime
+                  .objMoment(filter.displayValues[index])
+                  .format("MMM DD, YYYY");
+              } else if (filter.displayValues[0] === "Current Time") {
+                formattedValue = this.formatTime
+                  .objMoment(filter.displayValues[index])
+                  .format("hh:mm a");
+              }
+              if (formattedValue == "Invalid date") {
+                displayValue = filter.displayValues[index] + "";
+              } else {
+                displayValue = formattedValue + "";
+              }
+            
+             
+              
+            }else if(filter.displayName === CEMDateFilter.Date) {
+              let dateVal = (<any>filter).timePeriodExtraParams;
+              filterValue[CEMFilterParamMap.updatedValue] = filter.updatedValue;
+              filterValue[CEMFilterParamMap.DateFilterFormat] = CEMFilterParamMap.CEMDefaultDateFormat;  
+              if(filter.updatedValue === CEMDateFilter.Today || filter.updatedValue == undefined) {
+                filterValue[filter.name] = this.formatDate(new Date());
+                filterValue[CEMFilterParamMap.formDate] = this.formatDate(new Date());
+                filterValue[CEMFilterParamMap.originalDate] = new Date();
+                displayValue = filter.displayValues[index] + "";
+              }else {
+                filterValue[filter.name] = dateVal? this.formatDate(dateVal.startDate):this.formatDate(new Date());
+                filterValue[CEMFilterParamMap.formDate] = dateVal? this.formatDate(dateVal.startDate):this.formatDate(new Date());
+                filterValue[CEMFilterParamMap.originalDate] = dateVal? dateVal.startDate:new Date()
+                displayValue = filter.displayValues[index] + "";
+              }            
+              
+             
+            } else {
+              displayValue = filter.displayValues[index] + "";
+            }
+          } else {
+            displayValue = filter.values[index] + "";
+          }
+          filterValue[`${filter.name}-DisplayedValue`] = displayValue;
+        }
+      }
+    });
+    if (
+      Object.keys(filterValue).length === 0 &&
+      filterValue.constructor === Object
+    ) {
+      filterValue[filter.name] = filterSelectedValue;
+      filterValue[`${filter.name}-DisplayedValue`] = filterSelectedValue;
+    }
+
+    if(this.isMultiSelectFilter(filter)){
+          if(Array.isArray(filterSelectedValue)){
+            if(filterSelectedValue.length>1){
+              filterValue[filter.name] =  filterSelectedValue.join(this.multiSelectSeparator);
+            }
+          }
+          else if(filterSelectedValue.indexOf("'") ==  -1){
+            if(filterSelectedValue.indexOf(",") !=  -1){
+              filterValue[filter.name] = "'" + filterSelectedValue +"'";
+            } else{
+              filterValue[filter.name] = filterSelectedValue    
+            }
+          }
+          else if(filterSelectedValue.indexOf("'") !=  -1)
+            filterValue[filter.name] = filterSelectedValue     
+    }
+    return filterValue;
+  }
+
+  isMultiSelectFilter(filter){
+    let isMultiSelect = false;
+    if(filter["objFilter"].allowMultiSelect !== undefined ||
+     filter["objFilter"].allowMultiSelect !== ""){
+      if(isString(filter["objFilter"].allowMultiSelect)){
+        isMultiSelect = this.stringToBoolean(filter["objFilter"].allowMultiSelect);
+      } else if(isBoolean(filter["objFilter"].allowMultiSelect)) {
+        isMultiSelect = filter["objFilter"].allowMultiSelect;
+      }
+    }
+    return isMultiSelect
+  }
+
+  stringToBoolean(string){
+    return (string == 'true')
+  }
+
+  /* function to get updated value of textbox filter
+    @filter: filter object
+  */
+  getFilterValueTextBox(filter: FilterConf) {
+    let filterValue = {};
+    let filterSelectedValue =
+      filter.updatedValue || filter.defaultValue || filter.values[0] || "";
+    filterValue[filter.name] = filterSelectedValue;
+    filterValue[`${filter.name}-DisplayedValue`] = filterSelectedValue;
+    return filterValue;
+  }
+
+  /* function to get value of date picker filter
+    @filter: filter object
+  */
+  getFilterValueDatePicker(filter: FilterConf) {
+    let filterValue = {};
+    let filterSelectedValue =
+      filter.updatedValue || filter.defaultValue || filter.values[0] || "";
+    filterValue[filter.name] = filterSelectedValue;
+    filterValue[`${filter.name}-DisplayedValue`] = filterSelectedValue;
+    return filterValue;
+  }
+
+  /* function to construct the json format for the values of time period filter
+     @filter: updated filter
+  */
+  handleTimePeriodCalculation(filter, dashboard): any {
+    let filterSelectedValue =
+      filter.updatedValue || filter.defaultValue || filter.values[0] || "";
+    if ((<any>window).scheduler) {
+      filterSelectedValue = filter.defaultValue;
+    }
+    const dashboarFilterBarIcons = dashboard.filterbar.icons;
+    let filterBarUnit;
+    if (dashboard.filterbar.periodFilter !== undefined) {
+      filterBarUnit = dashboard.filterbar.periodFilter.unit || "";
+    }
+
+    let calculatedTime: object = {};
+    let calculatedTime1: object = {};
+    if (filterSelectedValue === "Custom") {
+      if ((<any>window).scheduler) {
+        calculatedTime = this.timePeriodService.getCalculatedTimeForScheduler(
+          dashboarFilterBarIcons,
+          filterSelectedValue,
+          calculatedTime,
+          filterBarUnit
+        );
+      } else {
+        calculatedTime["startDate"] =
+          filter.timePeriodExtraParams.startDate || new Date();
+        calculatedTime["endDate"] =
+          filter.timePeriodExtraParams.endDate || new Date();
+        calculatedTime1 = this.timePeriodService.getCalculatedTime(
+          dashboarFilterBarIcons,
+          filterSelectedValue,
+          calculatedTime,
+          filterBarUnit
+        );
+        calculatedTime = { ...calculatedTime, ...calculatedTime1 };
+      }
+      // if(calculatedTime.hasOwnProperty('startDate')) {
+      //   console.log('timerange_date_time is:', new Date(calculatedTime['startDate'] ));
+      // }
+    } else {
+      const tempFilterbar: any = this.getFilterBar(dashboard.pageId);
+      tempFilterbar.forEach(filter1 => {
+        if (filter1["name"] === "Interval") {
+          const interval = filter1["updatedValue"]; // "-1H"
+          const arrHour = interval.split("H");
+          const startDate = new Date();
+          startDate.setHours(startDate.getHours() + Number(arrHour[0]));
+          calculatedTime["startDate"] = startDate;
+          calculatedTime["endDate"] = new Date();
+          calculatedTime1 = this.timePeriodService.getCalculatedTime(
+            dashboarFilterBarIcons,
+            filterSelectedValue,
+            calculatedTime,
+            filterBarUnit
+          );
+          calculatedTime = { ...calculatedTime, ...calculatedTime1 };
+        } else if(filter1["name"] === "timePeriod"){
+          calculatedTime = this.timePeriodService.getCalculatedTime(
+            dashboarFilterBarIcons,
+            filterSelectedValue,
+            calculatedTime,
+            filterBarUnit
+          );
+        }
+      });
+    }
+    const timePeriodDropDownValues = this.getFilterValueDropDown(filter);
+    const timePeriodValues = { ...calculatedTime, ...timePeriodDropDownValues };
+    return timePeriodValues;
+  }
+
+  /* function to update single filter data
+    @dashboard: current dashboard object
+    @conf: filter
+    @value: updated value
+  */
+  onUpdateData(
+    dashboard: Dashboard,
+    conf: FilterConf,
+    value: any
+  ): Promise<any> {
+    let returnObj;
+    return (returnObj = this.updateFilterByDependency(dashboard, conf, value));
+    /* switch( this.getFilterType( dashboard ) ) {
+      case 'STATIC':
+        returnObj = this.updateData( dashboard, conf, value );
+      break;
+      case 'STATIC_DEPENDENT':
+        returnObj = this.updateFilterByDependency( dashboard, conf, value );
+      break;
+      case 'DYNAMIC' :
+        returnObj = this.updateData( dashboard, conf, value );
+      break;
+      case 'DYNAMIC_DEPENDENT' :
+        returnObj = this.updateData( dashboard, conf, value );
+      break;
+    }
+    return returnObj; */
+  }
+
+  /* function to update single filter data
+    @dashboard: current dashboard object
+    @conf: filter
+    @value: updated value
+  */
+
+  updateData(dashboard: Dashboard, conf: FilterConf, value: any): Promise<any> {
+    let filterbar: any = this.getFilterBar(dashboard.pageId);
+    filterbar.forEach((filter: FilterConf) => {
+      if (filter.name === conf.name) {
+        filter.updatedValue = value;
+      }
+    });
+    this.setFilterBar(dashboard, filterbar);
+    return Promise.resolve(filterbar);
+  }
+
+  /* function to get dashboard duration time string
+   */
+  getDashboardTimeDuration(dashboard) {
+    let dashboardTimePeriodToBeShown = "";
+    let filterbar: any = this.getFilterBar(dashboard.pageId);
+    let objFilterValues: any = {};
+    let objTimeFilter;
+    filterbar.forEach((filter: FilterConf) => {
+      if (filter.isTimeperiodFilter === true) {
+        objTimeFilter = this.handleTimePeriodCalculation(filter, dashboard);
+      }
+    });
+
+    if (
+      objTimeFilter &&
+      typeof objTimeFilter["formattedTimeFrom"] !== "undefined"
+    ) {
+      dashboardTimePeriodToBeShown =
+        objTimeFilter["formattedTimeFrom"] +
+        " - " +
+        objTimeFilter["formattedTimeTo"] +
+        " " +
+        objTimeFilter["timeZoneOffset"];
+      /* Localiztion of  duration of time */
+      /* dashboardTimePeriodToBeShown =  this.formatTime.getFormattedDates(objTimeFilter['timeFrom'],false) +
+                                         ' ' + ' - ' + ' ' +
+                                    this.formatTime.getFormattedDates(objTimeFilter['timeTo'],objTimeFilter['timeZoneOffset']) */
+    } else {
+      dashboardTimePeriodToBeShown = "";
+    }
+
+    return dashboardTimePeriodToBeShown;
+  }
+
+  //Get Date filter 
+  getDashboardDate(dashboard) {
+    let dashboardDateToBeShown = "";
+    let filterbar: any = this.getFilterBar(dashboard.pageId);
+    let objFilterValues: any = {};
+    let objTimeFilter;
+    filterbar.forEach((filter: FilterConf) => {
+      if (filter.name === CEMDateFilter.Date) {
+        objTimeFilter = this.handleTimePeriodCalculation(filter, dashboard);
+      }
+    });
+
+    if (
+      objTimeFilter &&
+      typeof objTimeFilter[CEMDateFilter.Date] !== "undefined"
+    ) {
+      dashboardDateToBeShown =
+        objTimeFilter[CEMDateFilter.Date] 
+       
+      /* Localiztion of  duration of time */
+      /* dashboardTimePeriodToBeShown =  this.formatTime.getFormattedDates(objTimeFilter['timeFrom'],false) +
+                                         ' ' + ' - ' + ' ' +
+                                    this.formatTime.getFormattedDates(objTimeFilter['timeTo'],objTimeFilter['timeZoneOffset']) */
+    } else {
+      dashboardDateToBeShown = "";
+    }
+
+    return dashboardDateToBeShown;
+  }
+
+  // function to set promises to dashboard
+  setPromise(dashboard: Dashboard, promise): void {
+    if (this.arrAllFilterPromisses[dashboard.pageId] === undefined) {
+      this.arrAllFilterPromisses[dashboard.pageId] = [];
+    }
+    this.arrAllFilterPromisses[dashboard.pageId].push(promise);
+  }
+
+  // function to get promises allocated to dashboard
+  getPromise(dashboard: Dashboard): Array<Promise<any>> {
+    if (this.arrAllFilterPromisses[dashboard.pageId] !== undefined) {
+      return this.arrAllFilterPromisses[dashboard.pageId];
+    }
+  }
+
+  // function to remove promises of dashboard
+  clearPromises(dashboard: Dashboard): void {
+    if (this.arrAllFilterPromisses[dashboard.pageId] !== undefined) {
+      this.arrAllFilterPromisses[dashboard.pageId] = [];
+    }
+  }
+  updateLoadedFilterList(dashboardPageId, filterName) {
+    if (this.loadedFilterList[dashboardPageId].indexOf(filterName) < 0) {
+      this.loadedFilterList[dashboardPageId].push(filterName);
+    }
+  }
+
+  // function to set dynamicCount to dashboard
+  setdynamicFiltersCount(dashboard: Dashboard, dynamicFiltersCount): void {
+    if (this.arrAlldynamicFiltersCount[dashboard.pageId] === undefined) {
+      this.arrAlldynamicFiltersCount[dashboard.pageId] = [];
+    }
+    this.arrAlldynamicFiltersCount[dashboard.pageId] = dynamicFiltersCount;
+  }
+  getdynamicFiltersCount(dashboard) {
+    return this.arrAlldynamicFiltersCount[dashboard.pageId] || 0;
+  }
+}
+
+/*  FilterSingle class to make object of each individual filter
+    @objFilter: Constructor parameter for filter json object
+*/
+export class FilterSingle implements FilterConf {
+  public name: string;
+  public displayName: string;
+  public values: any;
+  public displayValues: any;
+  public defaultValue: any;
+  public type: any;
+  private hidden: Boolean;
+  public isTimeperiodFilter: Boolean = false;
+  public storeAndValues: any;
+  public dependencies: any;
+  public dependantNames: any;
+
+  constructor(private objFilter: any) {
+    this.name = objFilter.name;
+    this.displayName = objFilter.displayName;
+    this.values = this.processFilterValues(objFilter);
+    this.displayValues = this.processFilterDisplayValues(objFilter);
+    this.defaultValue = this.processDefaultValue(objFilter); // objFilter.defaultValue;
+    this.type = this.processFilterType(objFilter);
+    this.hidden = objFilter.hidden || false;
+    this.isTimeperiodFilter = this.isTimePeriod();
+    this.storeAndValues = objFilter.storeAndValues || "";
+    this.dependencies = this.processDependencies(objFilter.dependencies);
+    this.dependantNames = this.processDpendentNames(objFilter.dependantNames);
+  }
+
+  /* function set filter values, by spliting the values string by comma given in filter pojo.
+    @objFilter: filter pojo
+  */
+  processFilterValues(objFilter): Array<any> {
+    let arrValues = [];
+    if (objFilter.values) {
+      arrValues = objFilter.values.split(",").map(value => value.trim());
+    } else if (objFilter.displayValues) {
+      arrValues = objFilter.displayValues.split(",").map(value => value.trim());
+    }
+    return arrValues;
+  }
+
+  /* function to set filter dipslay values, by spliting the display values string by comma given in filter pojo.
+     @objFilter: filter pojo
+  */
+  processFilterDisplayValues(objFilter): Array<any> {
+    let arrDisplayValues = [];
+    if (objFilter.displayValues) {
+      arrDisplayValues = objFilter.displayValues
+        .split(",")
+        .map(value => value.trim());
+    } else if (objFilter.values) {
+      arrDisplayValues = objFilter.values.split(",").map(value => value.trim());
+    }
+    return arrDisplayValues;
+  }
+
+  /* function to set filter type as per mentioned in pojo
+     default type would be dropdwon
+     @objFilter: filter pojo
+  */
+  processFilterType(objFilter): string {
+    let type = "";
+    if (objFilter.type === undefined) {
+      type = "dropdown";
+    } else {
+      type = objFilter.type;
+    }
+    return type;
+  }
+
+  /* function to set default value as per memtioned in Pojo
+     if default value not defined, then first value would be considered as default.
+     @objFilter: filter pojo
+  */
+  processDefaultValue(objFilter): any {
+    let defaultValue = "";
+    if (objFilter.defaultValue === undefined) {
+      defaultValue = this.values[0];
+    } else {
+      defaultValue = objFilter.defaultValue;
+    }
+    return defaultValue;
+  }
+
+  /* function to set filter dipslay values, by spliting the dependant names string by comma given in filter pojo.
+     @dependantNames: string of dependents filters names seperated by comma
+  */
+  processDpendentNames(dependantNames) {
+    if (dependantNames) {
+      return dependantNames.split(",").map(val => val.trim());
+    } else {
+      return [];
+    }
+  }
+
+  /* function to set filter dependencies values, by spliting the dependencies names string by comma given in filter pojo.
+     @dependencies: string of dependencies filters name seperated by comma
+  */
+  processDependencies(dependencies) {
+    if (dependencies) {
+      return dependencies.split(",").map(val => val.trim());
+    } else {
+      return [];
+    }
+  }
+
+  /* function to check the whether the filter is time period or not
+   */
+  isTimePeriod(): boolean {
+    if (this.name === "timePeriod" || this.name === "Datetime") {
+      return true;
+    }
+    return false;
+  }
+}
