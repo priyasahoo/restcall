@@ -1,0 +1,3860 @@
+<ng-container *ngIf="inputData.chartType === 'grid'">
+    <div id="{{'numberOptions'+colapsTabIndex}}">
+      <div class="number">
+        <div class="radio">
+          <label class="number clear noRange"
+            ><input
+              id="{{'shownumber'+colapsTabIndex}}"
+              type="radio"
+              [attr.data-rowIndex]="index"
+              data-tag="index"
+              name="prop"
+              value="numberOnly"
+              (click)="setRadioState('shownumber','prop','numberOnly',$event,colapsTabIndex);showHide('shownumber',colapsTabIndex);getrangeOut(inputData,$event,colapsTabIndex);"
+              [checked]="radiostate('shownumber'+colapsTabIndex,'prop','numberOnly', colapsTabIndex, true)"
+              (keydown.tab)="setFocus($event,true)"/><span>{{ locale['Show Number Only'] }}</span></label
+          >
+        </div>
+      </div>
+      <div class="inner-range-content hide"></div>
+  
+      <div id="{{'iconRange'+colapsTabIndex}}" class="number iconRange">
+        <div class="radio">
+          <label
+            ><input
+              id="{{'icons'+colapsTabIndex}}"
+              type="radio"
+              name="prop"
+              value="numberAndIcon"
+              (click)="setRadioState('icons','prop','numberAndIcon',$event,colapsTabIndex);showHide('icons',colapsTabIndex);getColorsOut(inputData,$event,colapsTabIndex);"
+              [checked]="radiostate('icons'+colapsTabIndex,'prop','numberAndIcon', colapsTabIndex, false)"
+            /><span
+              >{{ locale['Show Number + Status Icons as per Range'] }}</span
+            ></label
+          >
+        </div>
+  
+        <div class="block-row inner-range-content hide">
+          <div class="range_icon_wrapper">
+            <div class="row-table-default table-range">
+              <colgroup>
+                <col width="15%" />
+                <col width="15%" />
+                <col width="15%" />
+                <col width="15%" />
+                <col width="40%" />
+              </colgroup>
+  
+              <div class="row-thead">
+                <div class="row">
+                  <div class="col">
+                    <span class="range_wrapper">{{ locale['Range'] }}</span>
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                  <div class="col">
+                    <span id="{{'iconsSpan'+colapsTabIndex}}" class="icon_wrapper"
+                      >{{ locale['Icons'] }}</span
+                    >
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                  <div class="col"><span class="txt-transparent">empty</span></div>
+                  <div class="col"><span class="txt-transparent">empty</span></div>
+                </div>
+              </div>
+  
+              <div class="row-tbody">
+                <ng-container
+                  *ngFor="let input of arrInput; let rowIndex = index;"
+                >
+                  <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                    <div class="col text-center"><=</div>
+                    <div class="col text-center"></div>
+      
+                    <div class="col">
+                      <input
+                        type="number"
+                        class="form-control"
+                        (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                        [value]="getRange( rowIndex, 'ranges', 0 )"
+                        [title]="getRange(rowIndex, 'ranges', 0 )"
+                        aria-label="Less Than Range"
+                      />
+                    </div>
+                    <div class="col">
+                      <select
+                        id="selectLessThanDropdown"
+                        class="selectpicker form-control select-ico"
+                        (change)="setRange( '', 'gridDropDownLessThanStatus', null, $event )"
+                        [value]="getRange( '', 'gridDropDownLessThanStatus' )"
+                        [title]="getRange( '', 'gridDropDownLessThanStatus' )"
+                        attr.aria-labelledby="{{'iconsSpan'+colapsTabIndex}}"
+                      >
+                        <option value="normal" class="ico ico-cm-delete"
+                          >{{ locale['normal'] }}</option
+                        >
+                        <option value="critical">{{ locale['critical'] }}</option>
+                        <option value="warning">{{ locale['warning'] }}</option>
+                        <option value="fatal">{{ locale['fatal'] }}</option>
+                        <option value="indeterminate"
+                          >{{ locale['indeterminate'] }}</option
+                        >
+                        <option value="info">{{ locale['info'] }}</option>
+                        <option value="undefined"
+                          >{{ locale['undefined'] }}</option
+                        >
+                        <option value="unknown">{{ locale['unknown'] }}</option>
+                        <option value="warningmajor"
+                          >{{ locale['warning major'] }}</option
+                        >
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row range_wrapper_ele">
+                    <div class="col">
+                      <input
+                        *ngIf="rowIndex === 0"
+                        type="number"
+                        class="form-control"
+                        (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                        disabled
+                        [value]="getRange( rowIndex, 'ranges', 0 )"
+                        [title]="getRange( rowIndex, 'ranges', 0 )"
+                      />
+  
+                      <input
+                        *ngIf="rowIndex !== 0"
+                        type="number"
+                        class="form-control"
+                        disabled
+                        [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                        [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                      />
+                    </div>
+  
+                    <div class="col text-center">-</div>
+  
+                    <div class="col">
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="rangeEnd-{{rowIndex}}-{{colapsTabIndex}}"
+                        (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                        [value]="getRange( rowIndex, 'ranges', 1 )"
+                        [title]="getRange( rowIndex, 'ranges', 1 )"
+                      />
+                    </div>
+  
+                    <div class="col">
+                      <select
+                        class="selectpicker form-control select-ico"
+                        (change)="setRange( rowIndex, 'status', null, $event )"
+                        [value]="getRange( rowIndex, 'status' )"
+                        [title]="getRange( rowIndex, 'status' )"
+                        attr.aria-labelledby="{{'iconsSpan'+colapsTabIndex}}"
+                      >
+                        <option value="normal" class="ico ico-cm-delete"
+                          >{{ locale['normal'] }}</option
+                        >
+                        <option value="critical">{{ locale['critical'] }}</option>
+                        <option value="warning">{{ locale['warning'] }}</option>
+                        <option value="fatal">{{ locale['fatal'] }}</option>
+                        <option value="indeterminate"
+                          >{{ locale['indeterminate'] }}</option
+                        >
+                        <option value="info">{{ locale['info'] }}</option>
+                        <option value="undefined"
+                          >{{ locale['undefined'] }}</option
+                        >
+                        <option value="unknown">{{ locale['unknown'] }}</option>
+                        <option value="warningmajor"
+                          >{{ locale['warning major'] }}</option
+                        >
+                      </select>
+                    </div>
+  
+                    <div class="col">
+                      <div class="btn-group btn-group-default">
+                        <div class="col-btn-group">
+                        <button
+                          *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                          id="removeAddedRange-{{rowIndex}}"
+                          type="button"
+                          class="btn btn-link removeRange"
+                          (click)="removeRange(rowIndex,columnIndex,colapsTabIndex);setFocusDeleteForGrid($event, true, rowIndex, colIndex);"
+                          title="{{ locale['Delete'] }}"
+                          aria-label="Delete"
+                        >
+                          <span class="ico ico-gm-delete "></span>
+                        </button>
+                      </div>
+                      <div class="col-btn-group addRow-wrapper">
+                        <button
+                          id="addAnotherRange-{{rowIndex}}"
+                          type="button"
+                          class="btn btn-default addRange"                          
+                          (click)="addRanges(); setFocusForAddAnother($event, true, rowIndex, colapsTabIndex);"
+                          title="{{ locale['+ Add Another'] }}"
+                        >{{ locale['+ Add Another'] }}</button>
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="row range_wrapper_ele">
+                <div class="col text-center">></div>
+                <div class="col text-center"></div>
+      
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="gridColorRangeEnd"
+                    disabled
+                    [value]="getMinMaxGisRangeGreater('gridGreaterThanValue')"
+                    [title]="getMinMaxGisRangeGreater('gridGreaterThanValue')"
+                  />
+                </div>
+                <div class="col">
+                  <select
+                    aria-labelledby="iconsGreaterRange"
+                    class="selectpicker form-control select-ico gridSetFocus"
+                    (change)="setRange( '', 'gridDropDownGreaterThanStatus', null, $event )"
+                    [value]="getRange( '', 'gridDropDownGreaterThanStatus' )"
+                    [title]="getRange( '', 'gridDropDownGreaterThanStatus' )"
+                    attr.aria-labelledby="{{'iconsSpan'+colapsTabIndex}}"
+                    (keydown.tab)="setFocus($event,true,colapsTabIndex)"
+                  >
+                    <option value="normal" class="ico ico-cm-delete"
+                      >{{ locale['normal'] }}</option
+                    >
+                    <option value="critical">{{ locale['critical'] }}</option>
+                    <option value="warning">{{ locale['warning'] }}</option>
+                    <option value="fatal">{{ locale['fatal'] }}</option>
+                    <option value="indeterminate"
+                      >{{ locale['indeterminate'] }}</option
+                    >
+                    <option value="info">{{ locale['info'] }}</option>
+                    <option value="undefined"
+                      >{{ locale['undefined'] }}</option
+                    >
+                    <option value="unknown">{{ locale['unknown'] }}</option>
+                    <option value="warningmajor"
+                      >{{ locale['warning major'] }}</option
+                    >
+                  </select>
+                </div> 
+                <span id="iconsGreaterRange" class="sr-only"
+                  >BG Frame Greater Than Range</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div id="{{'colorRange'+colapsTabIndex}}" class="number colorRange">
+        <div class="radio">
+          <label
+            ><input
+              id="{{'colors'+colapsTabIndex}}"
+              type="radio"
+              name="prop"
+              value="numberAndColor"
+              (click)="setRadioState('colors','prop','numberAndColor',$event,colapsTabIndex);showHide('colors',colapsTabIndex);getStatusOut(inputData,$event,colapsTabIndex);"
+              [checked]="radiostate('colors'+colapsTabIndex,'prop','numberAndColor', colapsTabIndex, false)"
+            /><span
+              >{{ locale['Show Number + Change Background Color as per Range'] }}</span
+            ></label
+          >
+        </div>
+  
+        <div class="inner-range-content hide">
+          <div class="range_icon_wrapper">
+            <div class="row-table-default table-range">
+              <div class="row-thead">
+                <div class="row">
+                  <div class="col">
+                    <span class="range_wrapper">{{ locale['Range'] }}</span>
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                  <div class="col">
+                    <span class="icon_wrapper">{{ locale['BG'] }}</span>
+                  </div>
+                  <div class="col">
+                    <span class="icon_wrapper">{{ locale['Text'] }}</span>
+                  </div>
+                  <div class="col">
+                    <span class="txt-transparent">empty</span>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="row-tbody">
+                <ng-container
+                  *ngFor="let input of arrInput; let rowIndex = index;"
+                >
+                  <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                    <div class="col text-center"><=</div>
+                    <div class="col text-center"></div>
+      
+                    <div class="col">
+                      <input
+                        type="number"
+                        class="form-control"
+                        (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                        [value]="getRange( rowIndex, 'ranges', 0 )"
+                        [title]="getRange(rowIndex, 'ranges', 0 )"
+                        aria-label="Less Than Range"
+                      />
+                    </div>
+                    <div class="col">
+                      <color-picker
+                        class="large"
+                        [color]="getRange( '', 'gridLessThancolors' )"
+                        [colorFormat]="colorFormat"
+                        [showHtmlColorPicker]="true"
+                        [UserDefinedColorRange] = "false"
+                        (selectColor)="setColor( '', 'gridLessThancolors', null, $event )"
+                        (keydown.tab)="setFocus($event,true)"
+                        id="gridColorsLessThan"
+                      ></color-picker>
+                    </div>
+  
+                    <div class="col">
+                      <color-picker
+                        class="large"
+                        [color]="getRange( '', 'gridLessThanfontcolors' )"
+                        [colorFormat]="colorFormat"
+                        [showHtmlColorPicker]="true"
+                        [UserDefinedColorRange] = "false"
+                        (selectColor)="setColor( '', 'gridLessThanfontcolors', null, $event )"
+                        (keydown.tab)="setFocus($event,true)"
+                        id="colorpickerrightLessThan"
+                      ></color-picker>
+                    </div>
+                  </div>
+                  <div class="row range_wrapper_ele">
+                    <div class="col">
+                      <input
+                        *ngIf="rowIndex === 0"
+                        type="number"
+                        class="form-control"
+                        (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                        disabled
+                        [value]="getRange( rowIndex, 'ranges', 0 )"
+                        [title]="getRange( rowIndex, 'ranges', 0 )"
+                      />
+  
+                      <input
+                        *ngIf="rowIndex !== 0"
+                        type="number"
+                        class="form-control"
+                        disabled
+                        [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                        [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                      />
+                    </div>
+  
+                    <div class="col text-center">-</div>
+  
+                    <div class="col">
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="colorRangeEnd-{{rowIndex}}-{{colapsTabIndex}}"
+                        (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                        [value]="getRange( rowIndex, 'ranges', 1 )"
+                        [title]="getRange( rowIndex, 'ranges', 1 )"
+                      />
+                    </div>
+  
+                    <div class="col">
+                      <color-picker
+                        class="large"
+                        [color]="getRange( rowIndex, 'colors' )"
+                        [colorFormat]="colorFormat"
+                        [showHtmlColorPicker]="true"
+                        [UserDefinedColorRange] = "false"
+                        (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                        (keydown.tab)="setFocus($event,true)"
+                        id="gridColors-{{colapsTabIndex}}"
+                      ></color-picker>
+                    </div>
+  
+                    <div class="col">
+                      <color-picker
+                        class="large"
+                        [color]="getRange( rowIndex, 'fontcolors' )"
+                        [colorFormat]="colorFormat"
+                        [showHtmlColorPicker]="true"
+                        [UserDefinedColorRange] = "false"
+                        (selectColor)="setColor( rowIndex, 'fontcolors', null, $event )"
+                        (keydown.tab)="setFocus($event,true)"
+                        id="colorpickerright-{{rowIndex}}-{{colapsTabIndex}}"
+                      ></color-picker>
+                    </div>
+  
+                    <div class="col">
+                      <div class="btn-group btn-group-default">
+                        <div class="col-btn-group">
+                        <button
+                          *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                          id="innerAddButton-{{rowIndex}}"
+                          type="button"
+                          class="btn btn-link removeRange"
+                          (click)="removeRange(rowIndex,columnIndex,colapsTabIndex);setFocusDeleteForGrid($event, true, rowIndex, colIndex);"
+                          title="{{ locale['Delete'] }}"
+                          aria-label="Delete"
+                        >
+                          <span class="ico ico-gm-delete"></span>
+                        </button>
+                      </div>
+                      <div class="col-btn-group addRow-wrapper">
+                        <button
+                          id="gauge-add-range1-{{rowIndex}}"
+                          type="button"
+                          class="btn btn-default addRange"
+                          (click)="addcolors(); setFocusForAddAnother($event, true, rowIndex, colapsTabIndex);;"
+                          title="{{ locale['+ Add Another'] }}"                          
+                        >{{ locale['+ Add Another'] }}</button>
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+               <div class="row range_wrapper_ele" id="gridGreaterThanColorsDiv">
+                <div class="col text-center">></div>
+                <div class="col text-center"></div>
+      
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    disabled
+                    [value]="getMinMaxGisRangeGreater('gridColorPerRangeGreaterThanValue')"
+                    [title]="getMinMaxGisRangeGreater('gridColorPerRangeGreaterThanValue')"
+                  />
+                </div>
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'gridGreaterThancolors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( '', 'gridGreaterThancolors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                    id="gridColorsGreaterThan"
+                  ></color-picker>
+                </div>
+
+                <div class="col">
+                  <color-picker
+                    class="large colorpicker"
+                    [color]="getRange( '', 'gridGreaterThanfontcolors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( '', 'gridGreaterThanfontcolors', null, $event )"
+                    (keydown.tab)="setFocus($event,true,colapsTabIndex)"
+                    aria-labelledby="GreaterRange"
+                  ></color-picker>
+                </div>                
+                <span id="GreaterRange" class="sr-only"
+                  >BG Frame Greater Than Range</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Progress Bar starts -->
+      <div id="{{'progressbar-range'+colapsTabIndex}}" class="number">
+        <div class="radio">
+          <label
+            ><input
+              id="{{'progressbar'+colapsTabIndex}}"
+              type="radio"
+              name="prop"
+              value="replaceWithProgress"
+              (click)="setRadioState('progressbar','prop','replaceWithProgress',$event,colapsTabIndex);showHide('progressbar',colapsTabIndex);getprogressOut(inputData,$event,colapsTabIndex);"
+              [checked]="radiostate('progressbar'+colapsTabIndex,'prop','replaceWithProgress', colapsTabIndex, false)"
+            /><span>{{ locale['Replace Number with Progress Bar'] }}</span></label
+          >
+        </div>
+  
+        <div class="inner-range-content hide">
+          <div class="range_icon_wrapper">
+            <div class="row-table-default table-range">
+              <div class="row-table-caption">
+                <span class="range_wrapper"
+                  >{{ locale['Progress Bar Range'] }}</span
+                >
+              </div>
+  
+              <div class="row-tbody">
+                <div class="row range_wrapper_ele">
+                  <div class="col progresscol">
+                    <input
+                      type="number"
+                      class="form-control"
+                      disabled
+                      [value]="0"
+                      [title]="0"
+                    />
+                  </div>
+  
+                  <div class="col text-center">-</div>
+  
+                  <div class="col">
+                    <input
+                      type="number"
+                      class="form-control gridSetFocus"
+                      min="0"
+                      (input)="setprogessBar( rowIndex, 'maximum', colapsTabIndex, $event )"
+                      [value]="getprogessBar( 'maximum', colapsTabIndex )"
+                      [title]="getprogessBar( 'maximum', colapsTabIndex )"
+                      (keydown.tab)="setFocus($event,true,colapsTabIndex)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Progress bar end-->
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'badge'">
+    <div class="radio dotted-line-div dotted-line-bottom">
+      <label>
+        <input
+          id="defaultColor"
+          type="radio"
+          name="badgeColors"
+          value="defaultColor"
+          (click)="setCheckedRadios('defaultColor','badgeColors','defaultColor',$event);showHideRadioOptions($event,'badgeColors');removeBadgeProperties('fixed');"
+          [checked]="getCheckedRadios('defaultColor','badgeColors','defaultColor', 'undefined', true)"
+          (keydown.tab)="setFocus($event,true)"
+        />
+        <span>{{ locale['As per Theme'] }}</span>
+      </label>
+    </div>
+    <!-- Fixed Background and Text Colors -->
+    <div class="radio dotted-line-div dotted-line-bottom">
+      <label>
+        <input
+          id="sameColor"
+          type="radio"
+          name="badgeColors"
+          value="sameColor"
+          (click)="setCheckedRadios('sameColor','badgeColors','sameColor',$event);showHideRadioOptions($event,'badgeColors');removeBadgeProperties('ranges');"
+          [checked]="getCheckedRadios('sameColor','badgeColors','sameColor', 'undefined', false)"
+        />
+        <span>{{ locale['Fixed Background and Text Colors'] }}</span>
+      </label>
+  
+      <div class="badgeColors hide fixedColorsDiv">
+        <div class="col-md-7 colorwrapper">
+          <label class="control-label titleBg-Badge">{{ locale['Title BG'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getFixedBadgeColors('labelStyle','background-color')"
+            [colorFormat]="colorFormat"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setFixedBadgeColors($event,'labelStyle','background-color')"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+        <div class="col-md-7 colorwrapper">
+          <label class="control-label">{{ locale['title'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getFixedBadgeColors('labelStyle','color')"
+            [colorFormat]="colorFormat"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setFixedBadgeColors($event,'labelStyle','color')"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+        <div class="col-md-7 colorwrapper">
+          <label class="control-label valueBg-Badge">{{ locale['Value BG'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getFixedBadgeColors('valueStyle','background-color')"
+            [colorFormat]="colorFormat"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setFixedBadgeColors($event,'valueStyle','background-color')"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+        <div class="col-md-7 colorwrapper">
+          <label class="control-label">{{ locale['Value'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getFixedBadgeColors('valueStyle','color')"
+            [colorFormat]="colorFormat"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setFixedBadgeColors($event,'valueStyle','color')"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+        <div class="col-md-7 colorwrapper ">
+          <label class="control-label">{{ locale['Unit'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getFixedBadgeColors('unitColor','unitColor')"
+            [colorFormat]="colorFormat"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setFixedBadgeColors($event,'unitColor','unitColor')"
+            [lastColorBadge]="true"
+          ></color-picker>
+        </div>
+      </div>
+    </div>
+    <!-- Fixed Background and Text Colors ENDS-->
+  
+    <!-- Change Background and Text colors as per range -->
+    <div class="radio dotted-line-div clear-left">
+      <label>
+        <input
+          id="diferentColors"
+          type="radio"
+          name="badgeColors"
+          value="diferentColors"
+          (click)="setCheckedRadios('diferentColors','badgeColors','diferentColors',$event);showHideRadioOptions($event,'badgeColors');removeBadgeProperties('keeprange');"
+          [checked]="getCheckedRadios('diferentColors','badgeColors','diferentColors', 'undefined', false)"
+        />
+        <span
+          >{{ locale['Define Background and Text Colors for value ranges'] }}</span
+        >
+      </label>
+  
+      <div class="range_icon_wrapper hide badgeColors">
+        <div class="row-table-default table-range clsBadge">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper">{{ locale['Range'] }}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span class="icon_wrapper valueBg-Badge">{{ locale['Title BG'] }}</span>
+              </div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['title'] }}</span>
+              </div>
+              <div class="col">
+                <span class="icon_wrapper valueBg-Badge">{{ locale['Value BG'] }}</span>
+              </div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['Value'] }}</span>
+              </div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['Unit'] }}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'labelBgColorsLessThan' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( '', 'labelBgColorsLessThan', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'labelColorsLessThan' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( '', 'labelColorsLessThan', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'valueBgColorsLessThan' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'valueBgColorsLessThan', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'valueColorsLessThan' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'valueColorsLessThan', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( '', 'unitColorsLessThan' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'unitColorsLessThan', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+              </div> 
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex == 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex != 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'labelBgColors' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'labelBgColors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'labelColors' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'labelColors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'valueBgColors' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'valueBgColors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'valueColors' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'valueColors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'unitColors' )"
+                    [colorFormat]="colorFormat"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'unitColors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <div class="btn-group btn-group-default">
+                    <div class="col-btn-group">
+                    <button
+                      *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange space_Removerange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(); setFocus($event,true, rowIndex+1)"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEnd-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxRangeGreater('badgeGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxRangeGreater('badgeGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+              <color-picker
+                class="large"
+                [color]="getRange( '', 'labelBgColorsGreaterThan' )"
+                [colorFormat]="colorFormat"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setColor( '', 'labelBgColorsGreaterThan', null, $event )"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+
+            <div class="col">
+              <color-picker
+                class="large"
+                [color]="getRange( '', 'labelColorsGreaterThan' )"
+                [colorFormat]="colorFormat"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setColor( '', 'labelColorsGreaterThan', null, $event )"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+
+            <div class="col">
+              <color-picker
+                class="large"
+                [color]="getRange( '', 'valueBgColorsGreaterThan' )"
+                [colorFormat]="colorFormat"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setColor( '', 'valueBgColorsGreaterThan', null, $event )"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+
+            <div class="col">
+              <color-picker
+                class="large"
+                [color]="getRange( '', 'valueColorsGreaterThan' )"
+                [colorFormat]="colorFormat"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setColor( '', 'valueColorsGreaterThan', null, $event )"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+
+            <div class="col">
+              <color-picker
+                class="large setFocus"
+                [color]="getRange( '', 'unitColorsGreaterThan' )"
+                [colorFormat]="colorFormat"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setColor( '', 'unitColorsGreaterThan', null, $event )"
+                (keydown.tab)="setFocusOnColorPicker($event)"
+              ></color-picker>
+            </div> 
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Change Background and Text colors as per range ENDS-->
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'Gauge'">
+    <div id="gaugecolorRange" class="">
+      <div class="range_icon_wrapper prop">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper">{{locale['Range']}}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['Color'] }}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col gauge-colorBox-spacing">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'colors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <div class="btn-group btn-group-default gauge-delete-spacing" role="group">
+                    <div class="col-btn-group">
+                    <button
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(); setFocus($event,true,rowIndex+1);"
+                      (keydown.tab)="setFocus($event,true)"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'heatmap'">
+    <div id="heatmapcolorrange" class="heatmap">
+      <div class="form-group hr-dashed-divider-bottom">
+        <div class="radio">
+          <label>
+            <input
+              id="defaultcolor"
+              class="setFocus"
+              type="radio"
+              name="heatmapColors"
+              value="defaultcolor"
+              (click)="setCheckedRadios('defaultcolor','heatmapcolors','defaultcolor',$event);setDefaultHeatmapColor($event);"
+              [checked]="getCheckedRadios('defaultcolor','heatmapcolors','defaultcolor', 'undefined', true)"
+              (keydown.tab)="setFocus($event,true)"
+            /><span>{{ locale['Use Default Colors as per Theme'] }}</span>
+          </label>
+        </div>
+      </div>
+  
+      <div class="radio clear-left staticColorsHeatmap">
+        <label>
+          <input
+            id="staticColorRange"
+            type="radio"
+            name="heatmapColors"
+            value="staticColorRange"
+            (click)="setCheckedRadios('staticColorRange','heatmapcolors','staticColorRange',$event);setHeatmapRangeColors('staticColorRange',$event);"
+            [checked]="getCheckedRadios('staticColorRange','heatmapcolors','staticColorRange', 'undefined', false)"
+          />
+          <span>{{ locale['Define a Custom Static Color Range'] }}</span> </label
+        ><br />
+        <span class="txt-help-wrapper"
+          >{{ locale['In a Static Range, you define each color of every range that you specify. You can also give a name to each range.'] }}</span
+        >
+      </div>
+  
+      <div class="range_icon_wrapper hide prop heatmapRange">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper underline">{{ locale['Range'] }}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span id="name" class="icon_wrapper underline">{{ locale['Name'] }}</span>
+              </div>
+              <div class="col">
+                <span class="icon_wrapper underline">{{ locale['BG'] }}</span>
+              </div>
+              <div class="col">
+                <span id="Text" class="icon_wrapper underline">{{ locale['Text'] }}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+                
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                  <div class="color-wrapper">
+                    <input
+                      type="text"
+                      id="colorRangeEndLessThan"
+                      class="charts-placeholder"
+                      (input)="setRangeName('', $event, 'heatmapLessThanInputName')"
+                      [value]="getRangeName('', 'heatmapLessThanInputName')"
+                      [title]="getRangeName('', 'heatmapLessThanInputName')"
+                      placeholder="{{ locale[textPlaceholder] }}"
+                      aria-labelledby="Text"
+                    />
+                  </div>
+                </div>
+  
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorHeatmapBg('heatmapLessThanBgColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorHeatmapBg('heatmapLessThanBgColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="Text"
+                ></color-picker>
+                </div>
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorHeatmapText('heatmapLessThanTextColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorHeatmapText('heatmapLessThanTextColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="Text"
+                ></color-picker>
+                </div>
+              </div>
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+                <div class="col">
+                  <div class="color-wrapper">
+                   <input
+                      type="text"
+                      id="heatmapInBetweenId-{{rowIndex}}"
+                      class="charts-placeholder"
+                      (input)="setRangeName(rowIndex,$event,'names')"
+                      [value]="getRangeName(rowIndex,'names')"
+                      [title]="getRangeName(rowIndex,'names')"
+                      placeholder="{{ locale[textPlaceholder] }}"
+                      aria-labelledby="name"
+                    />
+                  </div>
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'backgroundcolors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'backgroundcolors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'colors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <div class="btn-group btn-group-default">
+                    <div class="col-btn-group">
+                    <button
+                      *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange"
+                      (click)="addRangeNames(); setFocus($event,true, rowIndex+1);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEndGreaterThan-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxRangeGreater('heatmapGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxRangeGreater('heatmapGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+              <div class="color-wrapper">
+                <input
+                  id="colorRangeEndGreaterThan"
+                  class="charts-placeholder"
+                  type="text"                  
+                  (input)="setRangeName('', $event, 'heatmapGreaterThanInputName')"
+                  [value]="getRangeName('', 'heatmapGreaterThanInputName')"
+                  [title]="getRangeName('', 'heatmapGreaterThanInputName')"
+                  placeholder="{{ locale[textPlaceholder] }}"
+                  aria-labelledby="Text"
+                />
+              </div>
+            </div>
+            <div class="col">
+              <color-picker
+                class="large"
+                [color]="getHighColorHeatmapBg('heatmapGreaterThanBgColor')"
+                [colorFormat]="colorFormat"
+                [showHtmlColorPicker]="true"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setHighColorHeatmapBg('heatmapGreaterThanBgColor',$event)"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+            <div class="col">
+            <color-picker
+              [color]="getHighColorHeatmapText('heatmapGreaterThanTextColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorHeatmapText('heatmapGreaterThanTextColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+              class=" large colorpicker rangeColorpicker"
+              aria-labelledby="GreaterRange"
+            ></color-picker>
+            </div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+          <div class="form-group dotted-line showRangeNameDiv">
+            <label>
+              <input
+                type="checkbox"
+                class=""
+                id="showRangeName"
+                name="showRangeName"
+                (click)="setHeatMapProperties('showRangeName',$event)"
+                [checked]="getHeatMapProperties('showRangeName')"
+              />
+              <span class="normalFont">{{ locale['Show Range Name on each Box'] }}</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input
+                type="checkbox"
+                class="setFocus"
+                id="show-range-in-legend"
+                name="showLegendRange"
+                (keydown.tab)="setFocus($event,true)"
+                (click)="setHeatMapProperties('showLegendRange',$event)"
+                [checked]="getHeatMapProperties('showLegendRange')"
+              />
+              <span class="normalFont">{{ locale['Show Range in Legend'] }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="radio clear-left hr-dashed-divider-top">
+        <label>
+          <input
+            id="customLinearRange"
+            type="radio"
+            name="heatmapColors"
+            value="customLinearRange"
+            (click)="setCheckedRadios('customLinearRange','heatmapcolors','customLinearRange',$event);setHeatmapRangeColors('customLinearRange',$event);"
+            [checked]="getCheckedRadios('customLinearRange','heatmapcolors','customLinearRange', 'undefined', false)"
+          />
+          <span>{{ locale['Define a Custom Linear Range'] }}</span> </label
+        ><br />
+  
+        <span class="txt-help-wrapper"
+          >{{ locale['In a Linear Range, you only specify the min and max heat colors. Rest of the colors in between are rendered automatically. Text colors can not be controlled in this range.'] }}</span
+        >
+      </div>
+  
+      <div class="col-cls hide prop heatmapRangeLinear">
+        <div class="minMaxHeatDiv minHeatDiv">
+          <label class="control-label">{{ locale['Min Heat'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getMinMaxHeat('minHeat')"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setMinMaxHeat('minHeat',$event)"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+        <div class="minMaxHeatDiv maxHeatDiv">
+          <label class="control-label">{{ locale['Max Heat'] }}</label>
+          <color-picker
+            class="large"
+            [color]="getMinMaxHeat('maxHeat')"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setMinMaxHeat('maxHeat',$event)"
+            (keydown.tab)="setFocus($event,true)"
+          ></color-picker>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'bullet'">
+    <div id="bulletcolorrange" class="bullet dotted-line-bottom">
+      <div class="form-group dotted-line-div dotted-line-bottom">
+        <div class="radio">
+          <label>
+            <input
+              id="defaultcolor"
+              class="setFocus"
+              type="radio"
+              name="bulletColors"
+              value="defaultcolor"
+              (click)="setCheckedRadios('defaultcolor','bulletcolors','defaultcolor',$event);setDefaultBulletColor($event);"
+              [checked]="getCheckedRadios('defaultcolor','bulletcolors','defaultcolor', 'undefined', true)"
+              (keydown.tab)="setFocus($event,true)"
+            />
+            <span>{{ locale['Use Default Colors as per Theme'] }}</span>
+          </label>
+        </div>
+      </div>
+  
+      <div class="radio clear-left staticColorsBullet">
+        <label>
+          <input
+            id="staticColorRange"
+            type="radio"
+            name="bulletColors"
+            value="staticColorRange"
+            (click)="setCheckedRadios('staticColorRange','bulletcolors','staticColorRange',$event);setBulletRangeColors('staticColorRange',$event);"
+            [checked]="getCheckedRadios('staticColorRange','bulletcolors','staticColorRange', 'undefined', false)"
+          />
+          <span>{{ locale['Define a Custom Color Range'] }}</span>
+        </label>
+        <br />
+        <span class="txt-help-wrapper"
+          >{{ locale['In a Custom Range, you define each color of every range that you specify. You can also define the color of the bullet.'] }}</span
+        >
+      </div>
+  
+      <div class="range_icon_wrapper hide prop">
+        <div class="row-table-default table-range bulletRange">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper underline">{{ locale['Range'] }}</span>
+              </div>
+              <div class="col">
+                <span class="txt-transparent">empty</span>
+              </div>
+  
+              <div class="col">
+                <span class="txt-transparent">empty</span>
+              </div>             
+              <div class="col" title="{{ locale['BG'] }}">
+                <!--Added for alignment issue-->
+                <span id="BG" class="icon_wrapper underline bulletBGSpacing"
+                  >{{ locale['BG'] }}</span
+                >
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorBullet('bulletLessThanColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorBullet('bulletLessThanColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="BG"
+                ></color-picker>
+                </div>
+              </div>
+              <div class="row range_wrapper_ele ">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1)"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1)"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getRange( rowIndex, 'colors' )"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                  (keydown.tab)="setFocus($event,true)"
+                ></color-picker>
+                </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default">
+                    <div class="col-btn-group">
+                    <button
+                     *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button></div>
+                  <div class="col-btn-group addRow-wrapper"><button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange"
+                      (click)="addcolors();setFocus($event,true, rowIndex+1);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button></div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEnd-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxRangeGreater('bulletGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxRangeGreater('bulletGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+            <color-picker
+              [color]="getHighColorBullet('bulletGreaterThanColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorBullet('bulletGreaterThanColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+              class=" large colorpicker rangeColorpicker"
+              aria-labelledby="GreaterRange"
+            ></color-picker>
+            </div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+        </div>
+        <div class="color-wrapper bulletColor dotted-line-div last-element">
+          <label class="control-label underline"
+            >{{ locale['Bullet Color'] }}</label
+          >
+          <div class="col">
+          <color-picker
+            class="large setFocus"
+            [color]="getBulletColor()"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setBulletColor($event)"
+            (keydown.tab)="setFocus($event,true)"
+            (keydown.tab)="setFocusOnColorPicker($event)"
+          ></color-picker>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'tagcloud'">
+    <div id="tagcloudcolorrange" class="tagcloud">
+      <div
+        class="form-group dotted-line-div dotted-line-bottom defaultTagCloudColorsDiv"
+      >
+        <div class="radio">
+          <label>
+            <input
+              id="defaultcolor"
+              class="setFocus"
+              type="radio"
+              name="tagcloudColors"
+              value="1"
+              (click)="setCheckedRadios('defaultcolor','tagcloudColors','defaultcolor',$event);setTagCloudColors($event,'1');"
+              [checked]="getCheckedRadios('defaultcolor','tagcloudColors','defaultcolor', 'undefined', true)"
+              (keydown.tab)="setFocus($event,true)"
+            /><span>{{ locale['No Scale & Default Colors as per Theme'] }}</span>
+          </label>
+          <br />
+          <span class="txt-help-wrapper"
+            >{{ locale['This will not show any scale, and will render the Tag Cloud as per the default colors of the selected Theme by the user in the Engine.'] }}</span
+          >
+        </div>
+      </div>
+  
+      <div class="linearColorsTagCloud dotted-line-div">
+        <div class="radio clear-left">
+          <label>
+            <input
+              id="customLinearRange"
+              type="radio"
+              name="tagcloudColors"
+              value="2"
+              (click)="setCheckedRadios('customLinearRange','tagcloudColors','customLinearRange',$event);setTagCloudColors($event,'2');"
+              [checked]="getCheckedRadios('customLinearRange','tagcloudColors','customLinearRange', 'undefined', false)"
+            />
+            <span>{{ locale['Show a Linear Scale'] }}</span> </label
+          ><br />
+          <span class="txt-help-wrapper linear-txt"
+            >{{ locale['This will show a scale as per the Value/Frequency of the Word, and Tag Cloud will be rendered as per the min and max colors that you set.'] }}</span
+          >
+        </div>
+  
+        <div class="col-cls hide prop tagcloudRangeLinear">
+          <div class="minMaxHeatDiv minHeatDiv">
+            <label class="control-label">{{ locale['Min Value Color'] }}</label>
+  
+            <color-picker
+              class="large"
+              [color]="getMinMaxTagColor('minColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setMinMaxTagColor('minColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+            ></color-picker>
+          </div>
+          <div class="minMaxHeatDiv maxHeatDiv">
+            <label class="control-label">{{ locale['Max Value Color'] }}</label>
+            <color-picker
+              class="large setFocus"
+              [color]="getMinMaxTagColor('maxColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setMinMaxTagColor('maxColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+            ></color-picker>
+          </div>
+        </div>
+      </div>
+      <div
+        class="radio clear-left staticColorsTagcloud dotted-line-div dotted-line"
+      >
+        <label>
+          <input
+            id="staticColorRange"
+            type="radio"
+            name="tagcloudColors"
+            value="3"
+            (click)="setCheckedRadios('staticColorRange','tagcloudColors','staticColorRange',$event);setTagCloudColors($event,'3');"
+            [checked]="getCheckedRadios('staticColorRange','tagcloudColors','staticColorRange', 'undefined', false)"
+          />
+          <span>{{ locale['Show Scale as per Threshold'] }}</span> </label
+        ><br />
+        <span class="txt-help-wrapper"
+          >{{ locale['This will show a scale and Tag Cloud will be rendered as per the threshold colors thatare set of the Value/Frequency of the Word.'] }}</span
+        >
+      </div>
+  
+      <div class="range_icon_wrapper hide prop tagcloudRange">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper underline">{{ locale['Range'] }}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span id="color" class="icon_wrapper underline">{{ locale['Color'] }}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorTagcloud('tagcloudLessThanColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorTagcloud('tagcloudLessThanColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="color"
+                ></color-picker>
+                </div>
+              </div>
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1)"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1)"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+  
+                <div class="col">
+                  <color-picker
+                    class="large"
+                    [color]="getRange( rowIndex, 'colors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                  ></color-picker>
+                </div>
+  
+                <div class="col">
+                  <div class="btn-group btn-group-default" role="group">
+                    <div class="col-btn-group">
+                    <button
+                     *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(); setFocus($event,true,rowIndex+1);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEnd-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxRangeGreater('tagcloudGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxRangeGreater('tagcloudGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+            <color-picker
+              [color]="getHighColorTagcloud('tagcloudGreaterThanColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorTagcloud('tagcloudGreaterThanColor',$event)"
+              (keydown.tab)="setFocusOnColorPicker($event)"
+              class="setFocus large colorpicker rangeColorpicker"
+              aria-labelledby="GreaterRange"
+            ></color-picker>
+            </div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+        </div>
+      </div>
+  
+      <div
+        class="form-group dotted-line-div dotted-line clear categoryColorsTagCloud"
+      >
+        <div class="radio">
+          <label>
+            <input
+              id="categorycolor"
+              class=""
+              type="radio"
+              name="tagcloudColors"
+              value="4"
+              (click)="setCheckedRadios('categorycolor','tagcloudColors','categorycolor',$event);setTagCloudColors($event,'4');"
+              [checked]="getCheckedRadios('categorycolor','tagcloudColors','categorycolor', 'undefined', false)"
+              (keydown.tab)="setFocus($event,true)"
+            /><span>{{ locale['Show Scale as per Category'] }}</span>
+          </label>
+          <br />
+          <span class="txt-help-wrapper"
+            >{{ locale['Shows a scale according to the Category of the word. Renders the chart colors according to the Theme set on Engine.']
+            }}</span
+          >
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'OuterGauge'">
+    <div id="outergaugecolorRange" class="">
+      <div class="range_icon_wrapper prop">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper">{{locale['Range']}}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['Color'] }}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container
+              *ngFor="let input of parentArrInput; let rowIndex = index;"
+            >
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setComplexGaugeRange( rowIndex, 'ranges', 0, $event, 0 )"
+                    [value]="getComplexGaugeRange( rowIndex, 'ranges', 0, false, 0 )"
+                    [title]="getComplexGaugeRange( rowIndex, 'ranges', 0 , false, 0)"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getComplexGaugeRange( rowIndex - 1, 'ranges', 1, false, 0 )"
+                    [title]="getComplexGaugeRange( rowIndex - 1, 'ranges', 1, false, 0 )"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setComplexGaugeRange( rowIndex, 'ranges', 1, $event, 0 )"
+                    [value]="getComplexGaugeRange( rowIndex, 'ranges', 1 , false, 0)"
+                    [title]="getComplexGaugeRange( rowIndex, 'ranges', 1 , false, 0)"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getComplexGaugeRange( rowIndex, 'colors', undefined, false, 0)"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setComplexGaugeColor( rowIndex, 'colors', null, $event,0 )"
+                  (keydown.tab)="setFocus($event,true)"
+                ></color-picker>
+              </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default" role="group">
+                    <div class="col-btn-group">
+                    <button
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeComplexGaugeRange(rowIndex, 0);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                    </div>
+                    <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(0); setFocus($event,false,rowIndex+1);"
+                      (keydown.tab)="setFocus($event,false)"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'InnerGauge'">
+    <div id="innergaugecolorRange" class="">
+      <div class="range_icon_wrapper prop">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper">{{locale['Range']}}</span>
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span class="icon_wrapper">{{ locale['Color'] }}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container
+              *ngFor="let input of childArrInput; let rowIndex = index;"
+            >
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setComplexGaugeRange( rowIndex, 'ranges', 0, $event, 1 )"
+                    [value]="getComplexGaugeRange( rowIndex, 'ranges', 0, false, 1 )"
+                    [title]="getComplexGaugeRange( rowIndex, 'ranges', 0 , false, 1)"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getComplexGaugeRange( rowIndex - 1, 'ranges', 1, false, 1)"
+                    [title]="getComplexGaugeRange( rowIndex - 1, 'ranges', 1, false, 1)"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd1-{{rowIndex}}"
+                    (input)="setComplexGaugeRange( rowIndex, 'ranges', 1, $event, 1 )"
+                    [value]="getComplexGaugeRange( rowIndex, 'ranges', 1 , false,1)"
+                    [title]="getComplexGaugeRange( rowIndex, 'ranges', 1 , false, 1)"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getComplexGaugeRange( rowIndex, 'colors', undefined, false, 1)"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setComplexGaugeColor( rowIndex, 'colors', null, $event,1 )"
+                  (keydown.tab)="setFocus($event,true)"
+                ></color-picker>
+                </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default" role="group">
+                    <div class="col-btn-group">
+                    <button
+                      type="button"
+                      id="innerAddButton-{{rowIndex}}"
+                      class="btn btn-link removeRange"
+                      (click)="removeComplexGaugeRange(rowIndex, 1);setFocusDeleteForComplexGuage($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="gauge-add-range1-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(1); setFocus($event,false,rowIndex+1);"
+                      (keydown.tab)="setFocus($event,true)"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container
+    *ngIf="inputData.chartType === 'Map' && inputData.chartGis === 'kpiValue'"
+  >
+    <div class="col col-md-40 kpi-string">
+      <div class="color-wrapper">
+        <label>{{ locale['KPI'] }}</label>
+        <div class="col">
+          <input
+            type="text"
+            class="form-control"
+            name="kpiValuesColumn2"
+            title="{{ locale['Enter a KPI column name'] }}"
+            placeholder="{{ locale['Enter a KPI column name'] }}"
+            (input)="setRange( rowIndex, 'kpiValuesColumn2', 0, $event )"
+            [value]="getRange( rowIndex, 'kpiValuesColumn2' )"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="col col-md-20 kpi-string-indicators">
+      <label>{{ locale['Indicators'] }}</label>
+      <div class="radio clear-left map-indicators">
+        <label>
+          <input
+            id="R3Shapes"
+            type="radio"
+            name="valueShapes"
+            value="staticColorRange"
+            (click)="showShapesPanelContainerValues($event);setDefaultShapeValues('R3Shapes')"
+            [checked]="!getKPIValuesShapeIconCheckedRadios()"
+          />
+          <span>{{ locale['Shapes'] }}</span>
+        </label>
+        <label class="map-indicators-icon">
+          <input
+            id="R3Icons"
+            type="radio"
+            name="valueShapes"
+            value="staticColorRange"
+            (click)="showIconsPanelContainerValues($event);"
+            [checked]="getKPIValuesShapeIconCheckedRadios()"
+          />
+          <span>{{ locale['Icons'] }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="col col-md-60 margin-threshold-values">{{ locale['Define Threshold based on'] }}<div 
+      class="block no-treeIcons">
+        <div class="form-group">
+          <div class="radio col-md-25 threshold-radio">
+            <label>
+              <input
+                type="radio"
+                id="R3Ranges"
+                name="rangeValue"
+                value="noicon"
+                (click)="setThresholdRangeValue($event);"
+                [checked]="getThresholdRangeValue()"
+              />
+              <span>{{locale['Range']}}</span>
+            </label>
+          </div>
+          <div class="radio col-md-20 threshold-radio-icon">
+            <label>
+              <input
+                type="radio"
+                id="R3Values"
+                name="rangeValue"
+                value="noicon"
+                (click)="setThresholdRangeValue($event);"
+                [checked]="!getThresholdRangeValue()"
+              />
+              <span>{{locale['Value']}}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+  
+      <div
+        *ngIf="AllData.properties.KPISValuesShapeIcon == 'R3Shapes'"
+        id="123"
+        class="row-table-default table-range-map"
+      >
+        <div
+          *ngIf="AllData.properties.KPIValuesRangeValue == 'R3Ranges' && getThresholdRangeValue()"
+          class="row-table-default table-range shapesPanel-bottom"
+        >
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper underline" id="RangeForShape"
+                  >{{locale['Range']}}</span
+                >
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <label class="range_wrapper underline"
+                  >{{locale['Shape']}}</label
+                >
+              </div>
+              <div class="col">
+                <span class="range_wrapper underline" id="ColorRange"
+                  >{{locale['Color']}}</span
+                >
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                  <select
+                    class="selectpicker form-control select-ico"
+                    (change)="setRange( rowIndex, 'lessThanshape', null, $event )"
+                    [value]="getRange( rowIndex, 'lessThanshape' )"
+                    aria-label="Shape"
+                  >
+                    <option value="Dot">{{ locale['Dot'] }}</option>
+                    <option value="Diamond">{{ locale['Diamond'] }}</option>
+                    <option value="Square">{{ locale['Square'] }}</option>
+                    <option value="Triangle">{{ locale['Triangle'] }}</option>
+                  </select>
+                </div>
+                <div class="color-picker-map">
+                  <color-picker
+                    class="large"
+                    [color]="getMapColorFnPlaceholder(rowIndex, 'gisLessThanColor')"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setMapColorFnPlaceholder($event,rowIndex,'gisLessThanColor')"
+                    (keydown.tab)="setFocus($event,true)"
+                    aria-labelledby="ColorRange"
+                  ></color-picker>
+                </div>
+              </div>
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    id="rangeInput-{{rowIndex}}"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                    aria-labelledby="RangeForShape"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange(rowIndex - 1, 'ranges', 1 )"
+                    [title]="getRange(rowIndex - 1, 'ranges', 1 )"
+                    aria-labelledby="RangeForShape"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                  />
+                </div>
+                <div class="col">
+                  <select
+                    class="selectpicker form-control select-ico"
+                    (change)="setRange( rowIndex, 'shape', null, $event )"
+                    [value]="getRange( rowIndex, 'shape' )"
+                    aria-label="Shape"
+                  >
+                    <option value="Dot">{{ locale['Dot'] }}</option>
+                    <option value="Diamond">{{ locale['Diamond'] }}</option>
+                    <option value="Square">{{ locale['Square'] }}</option>
+                    <option value="Triangle">{{ locale['Triangle'] }}</option>
+                  </select>
+                </div>
+                <div class="col clsGisShapesInbetween">
+                <div class="color-picker-map">
+                  <color-picker
+                    class="large"
+                    [color]="getMapColorFnPlaceholder(rowIndex, 'KPIValuesData')"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setMapColorFnPlaceholder($event,rowIndex,'KPIValuesData')"
+                    (keydown.tab)="setFocus($event,true)"
+                    aria-labelledby="ColorRange"
+                  ></color-picker>
+                </div>
+              </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default delete-map-icon" role="group">
+                    <div class="col-btn-group">
+                    <button
+                      id="removeAddedRangeR3Shapes-{{rowIndex}}"
+                      *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addcolors(); setFocusForAddAnother($event,true,rowIndex);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="gisColorRangeEndGreaterThan"
+                disabled
+                [value]="getMinMaxGisRangeGreater('gisGreaterThanShapeValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxGisRangeGreater('gisGreaterThanShapeValue')"
+              />
+            </div>
+            <div class="col">
+              <select
+                class="selectpicker form-control select-ico"
+                (change)="setRange( rowIndex, 'greaterThanshape', null, $event )"
+                [value]="getRange( rowIndex, 'greaterThanshape' )"
+                aria-label="Shape"
+              >
+                <option value="Dot">{{ locale['Dot'] }}</option>
+                <option value="Diamond">{{ locale['Diamond'] }}</option>
+                <option value="Square">{{ locale['Square'] }}</option>
+                <option value="Triangle">{{ locale['Triangle'] }}</option>
+              </select>
+            </div>
+            <div class="color-picker-map">
+              <color-picker
+                class="large setFocus"
+                [color]="getMapColorFnPlaceholder(rowIndex, 'gisGreaterThanColor')"
+                [colorFormat]="colorFormat"
+                [showHtmlColorPicker]="true"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setMapColorFnPlaceholder($event,rowIndex,'gisGreaterThanColor')"
+                (keydown.tab)="setFocusOnColorPicker($event)"
+                aria-labelledby="ColorRange"
+              ></color-picker>
+            </div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+        </div>
+        <div
+          *ngIf="AllData.properties.KPIValuesRangeValue == 'R3Values' && !getThresholdRangeValue()"
+          class="row-table-default table-range shapesPanel-bottom"
+        >
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span class="range_wrapper underline" id="rangeValueKPI"
+                  >{{locale['Value']}}</span
+                >
+              </div>
+              <div class="col">
+                <label class="range_wrapper underline" for="valueKPI"
+                  >{{locale['Shape']}}</label
+                >
+              </div>
+              <div class="col">
+                <span class="range_wrapper underline" id="colorForValue"
+                  >{{locale['Color']}}</span
+                >
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container
+              *ngFor="let input of arrValueInput; let rowIndex = index;"
+            >
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="valueKpi-{{ rowIndex }}"
+                    (input)="setvalueKpi( rowIndex, 'value', $event )"
+                    [value]="getvalueKpi( rowIndex, 'value' )"
+                    aria-labelledby="rangeValueKPI"
+                  />
+                </div>
+                <div class="col">
+                  <select
+                    class="selectpicker form-control select-ico"
+                    (change)="setvalueKpi( rowIndex, 'shape', $event )"
+                    [value]="getvalueKpi( rowIndex, 'shape' )"
+                    [title]="getvalueKpi( rowIndex, 'shape' )"
+                    id="valueKPI"
+                  >
+                    <option value="Dot">{{ locale['Dot'] }}</option>
+                    <option value="Diamond">{{ locale['Diamond'] }}</option>
+                    <option value="Square">{{ locale['Square'] }}</option>
+                    <option value="Triangle">{{ locale['Triangle'] }}</option>
+                  </select>
+                </div>
+                <div class="col">
+                <div class="color-picker-map">
+                  <color-picker
+                    class="large"
+                    [color]="getMapColorFnPlaceholder(rowIndex, 'KPIShapeValuesData')"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setMapColorFnPlaceholder($event,rowIndex,'KPIShapeValuesData')"
+                    (keydown.tab)="setFocus($event,true)"
+                    aria-labelledby="colorForValue"
+                  ></color-picker>
+                </div>
+                </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default" role="group">
+                    <div class="col-btn-group">
+                    <button
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeKpiValue(rowIndex);setFocusForDelete($event, false, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherKpi-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addKpiValue(); setFocusForAddAnother(event, flag, rowIndex, colIndex);"
+                      (keydown.tab)="setFocus($event,true)"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+      <div
+        *ngIf="AllData.properties.KPISValuesShapeIcon == 'R3Icons'"
+        class="row-table-default table-range-map valueIcons-panel"
+      >
+        <ng-container>
+          <appIcon
+            [AllData]="AllData"
+            [inputMapData]="inputMapData"
+            [chartType]="chartType"
+            [thresholdValue]="AllData.properties.KPIValuesRangeValue"
+          ></appIcon>
+        </ng-container>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container
+    *ngIf="inputData.chartType === 'Map' && inputData.chartGis === 'kpiString'"
+  >
+    <div class="col col-md-40 kpi-string">
+      <div class="color-wrapper">
+        <label>{{ locale['KPI'] }}</label>
+        <div class="col">
+          <input
+            type="text"
+            class="form-control"
+            name="kpiColumn2"
+            title="{{ locale['Enter a KPI column name'] }}"
+            placeholder="{{ locale['Enter a KPI column name'] }}"
+            (input)="setRange( rowIndex, 'kpiColumn2', 0, $event )"
+            [value]="getRange( rowIndex, 'kpiColumn2' )"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="col col-md-20 kpi-string-indicators">
+      <label>{{ locale['Indicators'] }}</label>
+      <div class="radio clear-left map-indicators">
+        <label>
+          <input
+            id="R2Shapes"
+            type="radio"
+            name="topologyColors"
+            value="staticColorRange"
+            (click)="showShapesPanelContainer();setDefaultShapeStrings('R2Shapes')"
+            [checked]="!getKPIStringShapeIconCheckedRadios()"
+          />
+          <span>{{ locale['Shapes'] }}</span>
+        </label>
+        <label class="map-indicators-icon">
+          <input
+            id="R2Icons"
+            type="radio"
+            name="topologyColors"
+            value="staticColorRange"
+            (click)="showIconsPanelContainer();"
+            [checked]="getKPIStringShapeIconCheckedRadios()"
+          />
+          <span>{{ locale['Icons'] }}</span>
+        </label>
+      </div>
+    </div>
+    <div
+      *ngIf="AllData.properties.KPISstrignShapeIcon == 'R2Icons'"
+      class="row-table-default table-range-map"
+    >
+      <ng-container>
+        <appIcon
+          [AllData]="AllData"
+          [inputMapData]="inputMapData"
+          [chartType]="chartType"
+          [thresholdValue]="AllData.properties.KPIValuesRangeValue"
+        ></appIcon>
+      </ng-container>
+    </div>
+    <div
+      *ngIf="AllData.properties.KPISstrignShapeIcon == 'R2Shapes'"
+      class="row-table-default table-range-map"
+    >
+      <div class="col shapes-map-panel">
+        <div class="row-thead">
+          <div class="row">
+            <div class="col">
+              <span class="range_wrapper underline" id="valueNameInput"
+                >{{ locale['Value'] }}</span
+              >
+            </div>
+            <div class="col">
+              <label class="range_wrapper underline"
+                >{{ locale['Shape'] }}</label
+              >
+            </div>
+            <div class="col">
+              <span class="range_wrapper underline" id="defaultShapecolor"
+                >{{ locale['Color'] }}</span
+              >
+            </div>
+          </div>
+        </div>
+  
+        <div class="row-tbody">
+          <ng-container *ngFor="let input of arrMapInput; let rowIndex = index;">
+            <div class="row range_wrapper_ele">
+              <div class="col">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="valueName-{{ rowIndex }}"
+                  (input)="setRange( rowIndex, 'value', 0, $event )"
+                  [value]="getRange( rowIndex, 'value' )"
+                  aria-labelledby="valueNameInput"
+                />
+              </div>
+              <div class="col">
+                <select
+                  class="selectpicker form-control select-ico"
+                  (change)="setRange( rowIndex, 'shape', null, $event )"
+                  [value]="getRange( rowIndex, 'shape' )"
+                  aria-label="Shape"
+                >
+                  <option value="Dot">{{ locale['Dot'] }}</option>
+                  <option value="Diamond">{{ locale['Diamond'] }}</option>
+                  <option value="Square">{{ locale['Square'] }}</option>
+                  <option value="Triangle">{{ locale['Triangle'] }}</option>
+                </select>
+              </div>
+              <div class="col">
+              <div class="color-picker-map">
+                <color-picker
+                  class="large"
+                  [color]="getMapColorFnPlaceholder(rowIndex,'KPIStringData')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setMapColorFnPlaceholder($event, rowIndex,'KPIStringData')"
+                  (keydown.tab)="setFocus($event,true)"
+                  aria-labelledby="defaultShapecolor"
+                ></color-picker>
+              </div>
+            </div>
+              <div class="col">
+                <div class="btn-group btn-group-default delete-gis" role="group">
+                  <div class="col-btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-link removeRange"
+                    (click)="removeRange(rowIndex); setFocusForDelete($event, true, rowIndex, colIndex);"
+                    title="{{ locale['Delete'] }}"
+                  >
+                    <span class="ico ico-gm-delete"></span>
+                  </button>
+                </div>
+                <div class="col-btn-group addRow-wrapper">
+                  <button
+                    id="addAnother-{{ rowIndex }}"
+                    type="button"
+                    class="btn btn-default addRange setFocus"
+                    (click)="addcolors(); setFocusForAddAnother($event, true, rowIndex, colIndex)"
+                    (keydown.tab)="setFocus($event,true)"
+                    title="{{ locale['+ Add Another'] }}"
+                  >{{ locale['+ Add Another'] }}</button>
+                </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="SpecificValueByDefault" class="row-table-default table-range">
+      <div class="row-thead">
+        <div class="row">
+          <div class="col">
+            <span class="range_wrapper range-gis">{{ locale['Value'] }}</span>
+          </div>
+          <div class="col">
+            <span class="range_wrapper underline">{{ locale['Shape'] }}</span>
+          </div>
+          <div class="col">
+            <span class="range_wrapper underline">{{ locale['Color'] }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <div class="row-tbody">
+        <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+          <div class="row range_wrapper_ele">
+            <div class="col shapes-string-map">
+              <input type="text" class="form-control" />
+            </div>
+            <div class="col shapes-string-map">
+              <select
+                class="selectpicker form-control select-ico"
+                (change)="setRange( rowIndex, 'shape', null, $event )"
+                [value]="getRange( rowIndex, 'shape' )"
+                [title]="getRange( rowIndex, 'shape' )"
+                attr.aria-labelledby="{{'iconsSpan'+colapsTabIndex}}"
+              >
+                <option value="Dot">{{ locale['Dot'] }}</option>
+                <option value="dianmond">{{ locale['Diamond'] }}</option>
+                <option value="Square">{{ locale['Square'] }}</option>
+                <option value="Triangle">{{ locale['Triangle'] }}</option>
+              </select>
+            </div>
+            <div class="col">
+            <div class="color-picker-map">
+              <color-picker
+                [color]="getMapColorFnPlaceholder()"
+                [colorFormat]="colorFormat"
+                [showHtmlColorPicker]="true"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setMapColorFnPlaceholder($event)"
+                (keydown.tab)="setFocus($event,true)"
+              ></color-picker>
+            </div>
+          </div>
+            <div class="col">
+              <div class="btn-group btn-group-default" role="group">
+                <div class="col-btn-group">
+                <button
+                  *ngIf="rowIndex !== 0"
+                  id="removeAddedRange-{{rowIndex}}"
+                  type="button"
+                  class="btn btn-link removeRange"
+                  (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                  title="{{ locale['Delete'] }}"
+                >
+                  <span class="ico ico-gm-delete"></span>
+                </button>
+              </div>
+              <div class="col-btn-group addRow-wrapper">
+                <button
+                  id="addAnotherRange-{{rowIndex}}"
+                  type="button"
+                  class="btn btn-default addRange setFocus"
+                  (click)="addcolors(); setFocus($event,true,rowIndex+1);"
+                  (keydown.tab)="setFocus($event,false)"
+                  title="{{ locale['+ Add Another'] }}"
+                >{{ locale['+ Add Another'] }}</button>
+              </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container
+    *ngIf="inputData.chartType === 'Map' && inputData.chartGis === 'defaultShapes'"
+  >
+    <div class="col col-md-25 kpi-string">
+      <div class="color-wrapper default-shape-width">
+        <label
+          class="range_wrapper underline default-shapes-label"
+          id="selectedValue"
+          >{{ locale['Shape'] }}</label
+        >
+        <div class="col">
+          <select
+            class="selectpicker form-control select-ico"
+            (change)="setRange( rowIndex, 'defaultShapes', null, $event )"
+            [value]="getRange( rowIndex, 'defaultShapes' )"
+            aria-labelledby="selectedValue"
+          >
+            <option value="Dot">{{ locale['Dot'] }}</option>
+            <option value="Diamond">{{ locale['Diamond'] }}</option>
+            <option value="Square">{{ locale['Square'] }}</option>
+            <option value="Triangle">{{ locale['Triangle'] }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="col col-md-35 kpi-string-indicators">
+      <label class="range_wrapper underline default-shapes-label"
+        >{{ locale['Color'] }}</label
+      >
+      <div class="radio clear-left map-indicators">
+        <label>
+          <input
+            id="R1DefaultColors"
+            type="radio"
+            name="defaultShapesOption"
+            value="staticColorRange"
+            (click)="showDefaultThemeContainer();setDefaultThemeContainer('R1DefaultColors')"
+            (keydown.tab)="setFocus($event,true)"
+            [checked]="!getKPIDefaultThemeContainerRadios()"
+          />
+          <span>{{ locale['As per Theme'] }}</span>
+        </label>
+        <label class="map-indicators-icon">
+          <input
+            id="R1CustomColors"
+            type="radio"
+            name="defaultShapesOption"
+            value="staticColorRange"
+            (click)="setDefaultThemeContainer('R1CustomColors');"
+            [checked]="getKPIDefaultThemeContainerRadios()"
+          />
+          <span>{{ locale['Custom'] }}</span>
+        </label>
+        <div
+          class="color-picker-map default-color-picker classForAVT"
+          *ngIf="getKPIDefaultThemeContainerRadios()"
+        >
+        <div class="col">
+          <color-picker
+            class="large"
+            [lastColorBadge]="true"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            [color]="getMapColorFnPlaceholder(null, 'asPerThemeCustomColor')"
+            [colorFormat]="colorFormat"
+            (selectColor)="setMapColorFnPlaceholder($event, '', 'asPerThemeCustomColor')"
+            (keydown.tab)="setFocus($event,true)"
+            aria-label="Custom color picker"
+          ></color-picker>
+        </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="inputData.chartType === 'topology'">
+    <div id="topologycolorrange" class="heatmap">
+      <div class="form-group dotted-line-bottom topologyCascadeSpacing">
+        <div class="radio">
+          <label>
+            <input
+              id="defaultcolor"
+              class="setFocus"
+              type="radio"
+              name="topologyColors"
+              value="defaultcolor"
+              (click)="setCheckedRadios('defaultcolor','topologyColors','defaultcolor',$event);setDefaultTopologyColor($event);"
+              [checked]="getCheckedRadios('defaultcolor','topologyColors','defaultcolor', 'undefined', true)"
+              (keydown.tab)="setFocus($event,true)"
+            /><span>{{ locale['As per Theme'] }}</span>
+          </label>
+        </div>
+      </div>
+  
+      <div class="radio clear-left staticColorsTopology">
+        <label>
+          <input
+            id="staticColorRange"
+            type="radio"
+            name="topologyColors"
+            value="staticColorRange"
+            (click)="setCheckedRadios('staticColorRange','topologyColors','staticColorRange',$event);setTopologyRangeColors('staticColorRange',$event);"
+            [checked]="getCheckedRadios('staticColorRange','topologyColors','staticColorRange', 'undefined', false)"
+          />
+          <span
+            >{{ locale['Specify edge color and thickness for a range'] }}</span
+          > </label
+        ><br />
+      </div>
+  
+      <div class="range_icon_wrapper hide prop heatmapRange">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span id="rangeLabel" class="range_wrapper underline"
+                  >{{ locale['Range'] }}</span
+                >
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span
+                  id="edge_color"
+                  class="icon_wrapper underline edge-color-label"
+                  >{{ locale['Edge color'] }}</span
+                >
+              </div>
+              <div class="col">
+                <span id="thickness" class="icon_wrapper underline thickness-span"
+                  >{{ locale['Thickness'] }}</span
+                >
+              </div>
+            </div>
+          </div>
+  
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorTopology('topologyLessThanColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorTopology('topologyLessThanColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="edge_color"
+                ></color-picker>
+                </div>
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control addThickness topology-addThickness setFocus"
+                    id="topologyLessThanColorThicknessId"
+                    (input)="setThickness('', 'topologyLessThanThickness', 0, $event )"
+                    [value]="getThickness('', 'topologyLessThanThickness',0)"
+                    [title]="getThickness('')"
+                    aria-labelledby="thickness"
+                    min="1"
+                  />
+                </div>
+                <div class="col gap-alignment-px">{{ locale['px'] }}</div>
+              </div>
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                    aria-labelledby="rangeLabel"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1)"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1)"
+                    aria-labelledby="rangeLabel"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    [title]="getRange( rowIndex, 'ranges', 1 )"
+                    aria-labelledby="rangeLabel"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getRange( rowIndex, 'colors' )"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                  (keydown.tab)="setFocus($event,true)"
+                  aria-labelledby="edge_color"
+                ></color-picker>
+                </div>
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control addThickness topology-addThickness setFocus"
+                    id="colorThikness-{{rowIndex}}"
+                    (input)="setThickness( rowIndex, 'thickness', 1, $event )"
+                    [value]="getThickness(rowIndex, 'thickness',1)"
+                    [title]="getThickness(rowIndex)"
+                    aria-labelledby="thickness"
+                    min="1"
+                  />
+                </div>
+  
+                <div class="col gap-alignment-px">{{ locale['px'] }}</div>
+  
+                <div class="col">
+                  <div class="btn-group btn-group-default">
+                    <div class="col-btn-group">
+                    <button
+                      *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                      aria-label="Delete"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      id="addAnotherRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-default addRange setFocus"
+                      (click)="addRangeNames(); setFocus($event,true,rowIndex+1);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col">
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEnd-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxGisRangeGreater('topologyGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxGisRangeGreater('topologyGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+            <color-picker
+              [color]="getHighColorTopology('topologyGreaterThanColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorTopology('topologyGreaterThanColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+              class=" large colorpicker rangeColorpicker"
+              aria-labelledby="GreaterRange"
+            ></color-picker>
+            </div>
+            <div class="col">
+              <input
+                type="number"
+                class="form-control addThickness topology-addThickness setFocus"
+                (keydown.tab)="setFocus($event,true)"
+                id="topologyGreaterThanColorThicknessId"
+                (input)="setThickness('', 'topologyGreaterThanThickness', 2, $event )"
+                [value]="getThickness('', 'topologyGreaterThanThickness',2)"
+                [title]="getThickness('')"
+                aria-labelledby="thickness"
+                min="1"
+              />
+            </div>
+            <div class="col gap-alignment-px">{{ locale['px'] }}</div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="inputData.chartType === 'tree'">
+    <div id="treecolorrange" class="tree">
+      <div class="group-block group-dotted-divider">
+        <div class="block">
+          <div class="form-group">
+            <div class="radio">
+              <label>
+                <input
+                  id="defaultcolor"
+                  class="setFocus"
+                  type="radio"
+                  name="treeColors"
+                  value="defaultcolor"
+                  (click)="setCheckedRadios('defaultcolor','treeColors','defaultcolor',$event);setDefaultTreeColor($event);"
+                  [checked]="getCheckedRadios('defaultcolor','treeColors','defaultcolor', 'undefined', true)"
+                  (keydown.tab)="setFocus($event,true)"
+                /><span>{{ locale['As per Theme'] }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+  
+        <div class="block">
+          <div class="radio clear-left staticColorsTree">
+            <label>
+              <input
+                id="staticColorRange"
+                class="setFocus"
+                type="radio"
+                name="treeColors"
+                value="staticColorRange"
+                (click)="setCheckedRadios('staticColorRange','treeColors','staticColorRange',$event);setTreeRangeColors('staticColorRange',$event);"
+                [checked]="getCheckedRadios('staticColorRange','treeColors','staticColorRange', 'undefined', false)"
+              />
+              <span
+                >{{ locale['Specify node label color for a range'] }}</span
+              > </label
+            ><br />
+          </div>
+  
+          <div class="range_icon_wrapper hide prop treeRange ">
+            <div class="">
+              <div class="row-table-default table-range ">
+                <div class="row-thead">
+                  <div class="row">
+                    <div class="col">
+                      <span class="range_wrapper underline" id="rangeLabel"
+                        >{{ locale['Range'] }}</span
+                      >
+                    </div>
+                    <div class="col">
+                      <span class="txt-transparent">empty</span>
+                    </div>
+                    <div class="col">
+                      <span class="txt-transparent">empty</span>
+                    </div>
+                    <div class="col">
+                      <span
+                        id="Label_Text"
+                        class="icon_wrapper underline edge-color-label"
+                        >{{ locale['Label text'] }}</span
+                      >
+                    </div>
+                    <div class="col"><span class="txt-transparent">empty</span></div>
+                    <div class="col"><span class="txt-transparent">empty</span></div>
+                  </div>
+                </div>
+  
+                <div class="row-tbody">
+                  <ng-container
+                    *ngFor="let input of arrInput; let rowIndex = index;"
+                  >
+                  <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                    <div class="col text-center"><=</div>
+                    <div class="col text-center"></div>
+      
+                    <div class="col">
+                      <input
+                        type="number"
+                        class="form-control"
+                        (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                        [value]="getRange( rowIndex, 'ranges', 0 )"
+                        [title]="getRange(rowIndex, 'ranges', 0 )"
+                        (keypress)="inputNumberOnly($event)"
+                        aria-label="Less Than Range"
+                      />
+                    </div>
+                    <div class="col">
+                    <color-picker
+                      [color]="getLowColorTree('treeLessThanColor')"
+                      [colorFormat]="colorFormat"
+                      [showHtmlColorPicker]="true"
+                      [UserDefinedColorRange] = "false"
+                      (selectColor)="setLowColorTree('treeLessThanColor',$event)"
+                      (keydown.tab)="setFocus($event,true)"
+                      class=" large colorpicker rangeColorpicker"
+                      aria-labelledby="Label_Text"
+                    ></color-picker>
+                    </div>
+                  </div>
+                    <div class="row range_wrapper_ele">
+                      <!-- <div> # engine side implementation pending
+                            <input type="radio" name="receipt" id="first" [disabled]='isDisabled' [checked]='isChecked' (click)= "alertRange($event, rowIndex, value)" />
+                        </div> -->
+                      <div class="col">
+                        <input
+                          *ngIf="rowIndex === 0"
+                          id="range1-{{rowIndex}}"
+                          type="number"
+                          class="form-control"
+                          (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                          disabled
+                          [value]="getRange( rowIndex, 'ranges', 0 )"
+                          [title]="getRange( rowIndex, 'ranges', 0 )"
+                          aria-labelledby="rangeLabel"
+                        />
+  
+                        <input
+                          *ngIf="rowIndex !== 0"
+                          id="range2-{{rowIndex}}"
+                          type="number"
+                          class="form-control"
+                          disabled
+                          [value]="getRange( rowIndex - 1, 'ranges', 1)"
+                          [title]="getRange( rowIndex - 1, 'ranges', 1)"
+                          aria-labelledby="rangeLabel"
+                        />
+                      </div>
+
+                      <div class="col text-center">-</div>
+  
+                      <div class="col">
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="colorRangeEnd-{{rowIndex}}"
+                          (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                          [value]="getRange( rowIndex, 'ranges', 1 )"
+                          [title]="getRange( rowIndex, 'ranges', 1 )"
+                          aria-labelledby="rangeLabel"
+                        />
+                      </div>
+                      <div class="col">
+                        <color-picker
+                          class="large"
+                          [color]="getRange( rowIndex, 'colors' )"
+                          [colorFormat]="colorFormat"
+                          [showHtmlColorPicker]="true"
+                          [UserDefinedColorRange] = "false"
+                          (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                          (keydown.tab)="setFocus($event,true)"
+                          aria-labelledby="Label_Text"
+                        ></color-picker>
+                      </div>
+                      <div class="col">
+                        <div class="btn-group btn-group-default tree-delete-spacing">
+                          <div class="col-btn-group">
+                          <button
+                           *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                            id="removeAddedRange-{{rowIndex}}"
+                            type="button"
+                            class="btn btn-link removeRange"
+                            (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                            title="{{ locale['Delete'] }}"
+                            aria-label="Delete"
+                          >
+                            <span class="ico ico-gm-delete"></span>
+                          </button>
+                        </div>
+                        <div class="col-btn-group addRow-wrapper">
+                          <button
+                            id="addAnotherRange-{{rowIndex}}"
+                            type="button"
+                            class="btn btn-default addRange"
+                            (click)="addRangeNames(); setFocus($event,true,rowIndex+1);"
+                            title="{{ locale['+ Add Another'] }}"
+                          >{{ locale['+ Add Another'] }}</button>
+                        </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+                <div class="row range_wrapper_ele">
+                  <div class="col text-center">></div>
+                  <div class="col text-center"></div>
+        
+                  <div class="col">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="colorRangeEnd-{{rowIndex}}"
+                      disabled
+                      [value]="getMinMaxRangeGreater('treeGreaterThanValue')"
+                      (keypress)="inputNumberOnly($event)"
+                      [title]="getMinMaxRangeGreater('treeGreaterThanValue')"
+                    />
+                  </div>
+                  <div class="col">
+                  <color-picker
+                    [color]="getHighColorTree('treeGreaterThanColor')"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setHighColorTree('treeGreaterThanColor',$event)"
+                    (keydown.tab)="setFocusOnColorPicker($event)"
+                    class="setFocus large colorpicker rangeColorpicker"
+                    aria-labelledby="GreaterRange"
+                  ></color-picker>
+                  </div>
+                  <span id="GreaterRange" class="sr-only"
+                    >BG Frame Greater Than Range</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- <div class="form-group ">  # Hide engine side implementation pending
+          
+                    <label>
+                      <input type="checkbox" class="" id="alertRangeColor" name="alertRangeColor" (click)="setHeatMapProperties('alertRangeColor',$event)"
+                       [checked]="getTreeProperties('alertRangeColor')" (change)="changeThis($event)"/>
+                      <span class="normalFont"> {{ locale['Cascade alert range color to all its parent nodes'] }}</span>
+                    </label><br>
+                    <span class="txt-help-wrapper" style="display:none" id="cascadeHelpText">{{ locale['From the range list, select the range that indicates an alert range.'] }}</span>
+                    <div class="clear-left"></div>
+                  </div> -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-container *ngIf="inputData.chartType === 'treemap'">
+    <div id="treemapcolorrange" class="treemap">
+      <div class="form-group">
+        <div class="radio">
+          <label>
+            <input
+              id="defaultcolor"
+              class="setFocus"
+              type="radio"
+              name="treemapColors"
+              value="defaultcolor"
+              (click)="setCheckedRadios('defaultcolor','treemapColors','defaultcolor',$event);setDefaultTreemapColor($event);"
+              [checked]="getCheckedRadios('defaultcolor','treemapColors','defaultcolor', 'undefined', true)"
+              (keydown.tab)="setFocus($event,true)"
+            /><span>{{ locale['As per Theme'] }}</span>
+          </label>
+        </div>
+      </div>
+  
+      <div class="radio clear-left staticColorsTreemap show_range_Treemap">
+        <label>
+          <input
+            id="staticColorRange"
+            type="radio"
+            name="treemapColors"
+            value="staticColorRange"
+            (click)="setCheckedRadios('staticColorRange','treemapColors','staticColorRange',$event);setTreemapRangeColor('staticColorRange',$event);"
+            [checked]="getCheckedRadios('staticColorRange','treemapColors','staticColorRange', 'undefined', false)"
+            aria-describedby="staticColorRangeHelptext"
+          />
+          <span>{{ locale['Define a Custom Static Color Range'] }}</span> </label
+        ><br />
+        <span id="staticColorRangeHelptext" class="txt-help-wrapper"
+          >{{ locale['Specify a range and its color.'] }}</span
+        >
+      </div>
+  
+      <div class="range_icon_wrapper hide prop treemapRange">
+        <div class="row-table-default table-range">
+          <div class="row-thead">
+            <div class="row">
+              <div class="col">
+                <span id="rangeLabel" class="range_wrapper underline"
+                  >{{ locale['Range'] }}</span
+                >
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col">
+                <span id="BG" class="icon_wrapper underline"
+                  >{{ locale['BG'] }}</span
+                >
+              </div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+              <div class="col"><span class="txt-transparent">empty</span></div>
+            </div>
+          </div>
+          <div class="row-tbody">
+            <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+              <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+                <div class="col text-center"><=</div>
+                <div class="col text-center"></div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange(rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-label="Less Than Range"
+                  />
+                </div>
+                <div class="col">
+                <color-picker
+                  [color]="getLowColorTreemap('treemapLessThanColor')"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setLowColorTreemap('treemapLessThanColor',$event)"
+                  (keydown.tab)="setFocus($event,true)"
+                  class=" large colorpicker rangeColorpicker"
+                  aria-labelledby="BG"
+                ></color-picker>
+                </div>
+              </div>
+  
+              <div class="row range_wrapper_ele">
+                <div class="col">
+                  <input
+                    *ngIf="rowIndex === 0"
+                    type="number"
+                    class="form-control"
+                    (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                    disabled
+                    [value]="getRange( rowIndex, 'ranges', 0 )"
+                    [title]="getRange( rowIndex, 'ranges', 0 )"
+                    (keypress)="inputNumberOnly($event)"
+                    aria-labelledby="rangeLabel"
+                  />
+  
+                  <input
+                    *ngIf="rowIndex !== 0"
+                    type="number"
+                    class="form-control"
+                    (keypress)="inputNumberOnly($event)"
+                    disabled
+                    [value]="getRange( rowIndex - 1, 'ranges', 1)"
+                    [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                    aria-labelledby="rangeLabel"
+                  />
+                </div>
+  
+                <div class="col text-center">-</div>
+  
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="colorRangeEnd-{{rowIndex}}"
+                    (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                    [value]="getRange( rowIndex, 'ranges', 1 )"
+                    (keypress)="inputNumberOnly($event)"
+                    [title]="getRange( rowIndex, 'ranges', 1 ) "
+                    aria-labelledby="rangeLabel"
+                  />
+                </div>
+                <div class="col">
+                  <color-picker
+                    [color]="getRange( rowIndex, 'backgroundcolors' )"
+                    [colorFormat]="colorFormat"
+                    [showHtmlColorPicker]="true"
+                    [UserDefinedColorRange] = "false"
+                    (selectColor)="setColor( rowIndex, 'backgroundcolors', null, $event )"
+                    (keydown.tab)="setFocus($event,true)"
+                    class=" large colorpicker rangeColorpicker"
+                    aria-labelledby="BG"
+                  ></color-picker>
+                </div>
+                <div class="col">
+                  <div class="btn-group btn-group-default">
+                    <div class="col-btn-group">
+                    <button
+                      *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                      id="removeAddedRange-{{rowIndex}}"
+                      type="button"
+                      class="btn btn-link removeRange"
+                      (click)="removeRange(rowIndex);setFocusForDelete($event, true, rowIndex, colIndex);"
+                      title="{{ locale['Delete'] }}"
+                    >
+                      <span class="ico ico-gm-delete"></span>
+                    </button>
+                  </div>
+                  <div class="col-btn-group addRow-wrapper">
+                    <button
+                      type="button"
+                      id="addAnotherRange-{{rowIndex}}"
+                      class="btn btn-default addRange"
+                      (click)="addRanges(); setFocus($event,true, rowIndex+1);"
+                      title="{{ locale['+ Add Another'] }}"
+                    >{{ locale['+ Add Another'] }}</button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="row range_wrapper_ele">
+            <div class="col text-center">></div>
+            <div class="col text-center"></div>
+  
+            <div class="col"> 
+              <input
+                type="number"
+                class="form-control"
+                id="colorRangeEnd-{{rowIndex}}"
+                disabled
+                [value]="getMinMaxRangeGreater('treemapGreaterThanValue')"
+                (keypress)="inputNumberOnly($event)"
+                [title]="getMinMaxRangeGreater('treemapGreaterThanValue')"
+              />
+            </div>
+            <div class="col">
+            <color-picker
+              [color]="getHighColorTreemap('treemapGreaterThanColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorTreemap('treemapGreaterThanColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+              class=" large colorpicker rangeColorpicker"
+              aria-labelledby="GreaterRange"
+            ></color-picker>
+            </div>
+            <span id="GreaterRange" class="sr-only"
+              >BG Frame Greater Than Range</span
+            >
+          </div>
+          <div class="form-group show_range_Treemap minMaxRangeDiv textColor_treemap">
+            <label class="control-label" id="staticTextColor"
+              >{{ locale['Text'] }}</label
+            >
+            <div class="col">
+            <color-picker
+              [color]="getTreemapColor()"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setTreemapColor($event)"
+              (keydown.tab)="setFocus($event,true)"
+              class=" large colorpicker rangeColorpicker bulletColorButton TextColorDiv"
+              aria-labelledby="staticTextColor"
+            ></color-picker>
+            </div>
+          </div>
+  
+          <div class="form-group show_range_Treemap">
+            <label>
+              <input
+                type="checkbox"
+                class="setFocus"
+                id="show-range-in-legend"
+                name="showLegendRange"
+                (keydown.tab)="setFocus($event,true)"
+                (click)="setTreeMapProperties('showLegendRange',$event)"
+                [checked]="getTreeMapProperties('showLegendRange')"
+              />
+              <span class="normalFont">{{ locale['Show Range as Legend'] }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div
+        class="radio clear-left show_range_Treemap dotted-line-div dotted-line"
+      >
+        <label>
+          <input
+            id="customLinearRange"
+            type="radio"
+            name="treemapColors"
+            value="customLinearRange"
+            (click)="setCheckedRadios('customLinearRange','treemapColors','customLinearRange',$event);setTreemapRangeColor('customLinearRange',$event);"
+            [checked]="getCheckedRadios('customLinearRange','treemapColors','customLinearRange', 'undefined', false)"
+            aria-describedby="customLinearRangeHelptext"
+          />
+          <span>{{ locale['Define a Custom Linear Range'] }}</span> </label
+        ><br />
+  
+        <span id="customLinearRangeHelptext" class="txt-help-wrapper"
+          >{{ locale['Specify colors for min and max values. For the other values in the range, colors are rendered automatically.'] }}</span
+        >
+      </div>
+  
+      <div class="col-cls hide clear-left prop treemapRangeLinear">
+        <div class="minMaxRangeDiv minRangeDiv treemap-custom-color">
+          <label class="control-label" id="minRange"
+            >{{ locale['Min value'] }}</label
+          >
+          <div class="col">
+          <color-picker
+            [color]="getMinMaxRange('minRange')"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setMinMaxRange('minRange',$event)"
+            (keydown.tab)="setFocus($event,true)"
+            class=" large colorpicker rangeColorpicker"
+            aria-labelledby="minRange"
+          ></color-picker>
+          </div>
+        </div>
+        <div class="minMaxRangeDiv maxRangeDiv treemap-custom-color">
+          <label class="control-label" id="maxRange"
+            >{{ locale['Max value'] }}</label
+          >
+          <div class="col">
+          <color-picker
+            [color]="getMinMaxRange('maxRange')"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setMinMaxRange('maxRange',$event)"
+            (keydown.tab)="setFocus($event,true)"
+            class=" large colorpicker rangeColorpicker"
+            aria-labelledby="maxRange"
+          ></color-picker>
+          </div>
+        </div>
+        <div class="minMaxRangeDiv maxRangeDiv treemapText treemap-custom-color">
+          <label class="control-label" id="customTextColor"
+            >{{ locale['Text'] }}</label
+          >
+          <div class="col">
+          <color-picker
+            [color]="getTreemapTextColor('minMaxTextColor')"
+            [colorFormat]="colorFormat"
+            [showHtmlColorPicker]="true"
+            [UserDefinedColorRange] = "false"
+            (selectColor)="setTreemapTextColor('minMaxTextColor',$event)"
+            [lastColorBadge]="true"
+            class=" large colorpicker rangeColorpicker textcolor"
+            aria-labelledby="customTextColor"
+          ></color-picker>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+<ng-container *ngIf="inputData.chartType === 'CalendarHeatmap'">
+  <div id="calendarHeatmapcolorrange" class="calendarHeatmap">
+    <div class="form-group hr-dashed-divider-bottom calendar-default-dashed-line">
+      <div class="radio">
+        <label>
+          <input
+            id="defaultcolor"
+            class="setFocus"
+            type="radio"
+            name="calendarHeatmapColors"
+            value="defaultcolor"
+            (click)="setCheckedRadios('defaultcolor','calendarHeatmapcolors','defaultcolor',$event);setDefaultcalendarHeatmapColor($event);"
+            [checked]="getCheckedRadios('defaultcolor','calendarHeatmapcolors','defaultcolor', 'undefined', true)"
+            (keydown.tab)="setFocus($event,true)"
+            aria-describedby="tabdescription-Span"
+          /><span>{{ locale['As per Theme'] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="radio clear-left staticColorsCalendarHeatmap">
+      <label>
+        <input
+          id="staticColorRange"
+          type="radio"
+          name="calendarHeatmapColors"
+          value="staticColorRange"
+          (click)="setCheckedRadios('staticColorRange','calendarHeatmapcolors','staticColorRange',$event);setCalendarHeatmapRangeColors('staticColorRange',$event);"
+          [checked]="getCheckedRadios('staticColorRange','calendarHeatmapcolors','staticColorRange', 'undefined', false)"
+          aria-describedby="static-Colors-CalendarHeatmap"  />
+        <span>{{ locale['Define a Custom Static Color Range'] }}</span> </label
+      ><br />
+      <span  id="static-Colors-CalendarHeatmap" class="txt-help-wrapper"
+        >{{ locale['In a static range, specify a range and define a color for the range and its labels.'] }}</span
+      >
+    </div>
+
+    <div class="range_icon_wrapper hide prop calendarHeatmapRange">
+      <div class="row-table-default table-range">
+        <div class="row-thead">
+          <div class="row">
+            <div class="col">
+              <span class="range_wrapper underline">{{ locale['Range'] }}</span>
+            </div>
+            <div class="col"><span class="txt-transparent">empty</span></div>
+            <div class="col"><span class="txt-transparent">empty</span></div>
+            <div class="col">
+              <span class="icon_wrapper underline">{{ locale['BG'] }}</span>
+            </div>
+            <div class="col">
+              <span class="icon_wrapper underline">{{ locale['Text'] }}</span>
+            </div>
+            <div class="col"><span class="txt-transparent">empty</span></div>
+            <div class="col"><span class="txt-transparent">empty</span></div>
+          </div>
+        </div>
+
+        <div class="row-tbody">
+          <ng-container *ngFor="let input of arrInput; let rowIndex = index;">
+            <div *ngIf="rowIndex === 0" class="row range_wrapper_ele">
+              <div class="col text-center"><=</div>
+              <div class="col text-center"></div>
+              
+              <div class="col">
+                <input
+                  type="number"
+                  class="form-control"
+                  (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                  [value]="getRange( rowIndex, 'ranges', 0 )"
+                  [title]="getRange(rowIndex, 'ranges', 0 )"
+                  (keypress)="inputNumberOnly($event)"
+                  aria-label="Less Than Range"
+                />
+              </div>
+              <div class="col">
+              <color-picker
+                [color]="getLowColorCalendarHeatmapBg('calendarHeatmapLessThanBgColor')"
+                [colorFormat]="colorFormat"
+                [showHtmlColorPicker]="true"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setLowColorCalendarHeatmapBg('calendarHeatmapLessThanBgColor',$event)"
+                (keydown.tab)="setFocus($event,true)"
+                class=" large colorpicker rangeColorpicker"
+              ></color-picker>
+            </div>
+            <div class="col">
+              <color-picker
+                [color]="getLowColorCalendarHeatmapText('calendarHeatmapLessThanTextColor')"
+                [colorFormat]="colorFormat"
+                [showHtmlColorPicker]="true"
+                [UserDefinedColorRange] = "false"
+                (selectColor)="setLowColorCalendarHeatmapText('calendarHeatmapLessThanTextColor',$event)"
+                (keydown.tab)="setFocus($event,true)"
+                class=" large colorpicker rangeColorpicker"
+              ></color-picker>
+              </div>
+            </div>
+            <div class="row range_wrapper_ele">
+              <div class="col">
+                <input
+                  *ngIf="rowIndex === 0"
+                  type="number"
+                  class="form-control"
+                  (input)="setRange( rowIndex, 'ranges', 0, $event )"
+                  disabled
+                  [value]="getRange( rowIndex, 'ranges', 0 )"
+                  [title]="getRange( rowIndex, 'ranges', 0 )"
+                />
+
+                <input
+                  *ngIf="rowIndex !== 0"
+                  type="number"
+                  class="form-control"
+                  disabled
+                  [value]="getRange( rowIndex - 1, 'ranges', 1 )"
+                  [title]="getRange( rowIndex - 1, 'ranges', 1 )"
+                />
+              </div>
+
+              <div class="col text-center">-</div>
+  
+              <div class="col">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="colorRangeEnd-{{rowIndex}}"
+                  (input)="setRange( rowIndex, 'ranges', 1, $event )"
+                  [value]="getRange( rowIndex, 'ranges', 1 )"
+                  [title]="getRange( rowIndex, 'ranges', 1 )"
+                />
+              </div>  
+              <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getRange( rowIndex, 'backgroundcolors' )"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setColor( rowIndex, 'backgroundcolors', null, $event )"
+                  (keydown.tab)="setFocus($event,true)"
+                ></color-picker>
+              </div>  
+              <div class="col">
+                <color-picker
+                  class="large"
+                  [color]="getRange( rowIndex, 'colors' )"
+                  [colorFormat]="colorFormat"
+                  [showHtmlColorPicker]="true"
+                  [UserDefinedColorRange] = "false"
+                  (selectColor)="setColor( rowIndex, 'colors', null, $event )"
+                  (keydown.tab)="setFocus($event,true)"
+                ></color-picker>
+              </div>
+              <div class="col">
+                <div class="btn-group btn-group-default">
+                  <div class="col-btn-group">
+                  <button
+                    *ngIf="rowIndex >= 1 || arrInput.length >= 2"
+                    id="removeAddedRangeCalendarHeatmap-{{rowIndex}}"
+                    type="button"
+                    class="btn btn-link removeRange"
+                    (click)="removeRange(rowIndex);setfocusForDeleteRangeCalendarHeatmap($event, true, rowIndex, colIndex);"
+                    title="{{ locale['Delete'] }}"
+                    attr.aria-label="{{ locale['Delete'] }}"
+                  >
+                    <span class="ico ico-gm-delete"></span>
+                  </button>
+                </div>
+                <div class="col-btn-group addRow-wrapper">
+                  <button
+                    id="addAnotherRangeCalendarHeatmap-{{rowIndex}}"
+                    type="button"
+                    class="btn btn-default addRange"
+                    (click)="addRangeNames(); setFocus($event,true, rowIndex+1);"
+                    title="{{ locale['+ Add Another'] }}"
+                  >{{ locale['+ Add Another'] }}</button>
+                </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+        <div class="row range_wrapper_ele">
+          <div class="col text-center">></div>
+          <div class="col text-center"></div>
+
+          <div class="col">
+            <input
+              type="number"
+              class="form-control"
+              id="colorRangeEndGreaterThan-{{rowIndex}}"
+              disabled
+              [value]="getMinMaxRangeGreater('calendarHeatmapGreaterThanValue')"
+              (keypress)="inputNumberOnly($event)"
+              [title]="getMinMaxRangeGreater('calendarHeatmapGreaterThanValue')"
+            />
+          </div>
+          <div class="col">
+            <color-picker
+              class="large"
+              [color]="getHighColorcalendarHeatmapBg('calendarHeatmapGreaterThanBgColor')"
+              [colorFormat]="colorFormat"
+              [showHtmlColorPicker]="true"
+              [UserDefinedColorRange] = "false"
+              (selectColor)="setHighColorCalendarHeatmapBg('calendarHeatmapGreaterThanBgColor',$event)"
+              (keydown.tab)="setFocus($event,true)"
+            ></color-picker>
+          </div>
+      <div class="col">
+        <color-picker
+          [color]="getHighColorCalendarHeatmapText('calendarHeatmapGreaterThanTextColor')"
+          [colorFormat]="colorFormat"
+          [showHtmlColorPicker]="true"
+          [UserDefinedColorRange] = "false"
+          (selectColor)="setHighColorCalendarHeatmapText('calendarHeatmapGreaterThanTextColor',$event)"
+          (keydown.tab)="setFocus($event,true)"
+          class=" large colorpicker rangeColorpicker"
+          aria-labelledby="GreaterRange"
+        ></color-picker>
+        </div>
+          <span id="GreaterRange" class="sr-only"
+            >BG Frame Greater Than Range</span
+          >
+        </div>
+        <div class="form-group show-legend-range-dashed-line">
+          <label>
+            <input
+              type="checkbox"
+              class="setFocus"
+              id="show-range-in-legend"
+              name="showLegendRange"
+              (keydown.tab)="setFocus($event,true)"
+              (click)="setCalendarHeatmapProperties('showLegendRangeForCalendarHeatmap',$event)"
+              [checked]="getCalendarHeatmapProperties('showLegendRangeForCalendarHeatmap')"
+            />
+            <span class="normalFont show-range-in-legend-calendar">{{ locale['Show Range in Legend'] }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="radio clear-left hr-dashed-divider-top customLinearRange-dashed-line-spacing">
+      <label>
+        <input
+          id="customLinearRange"
+          type="radio"
+          name="calendarHeatmapColors"
+          value="customLinearRange"
+          (click)="setCheckedRadios('customLinearRange','calendarHeatmapcolors','customLinearRange',$event);setCalendarHeatmapRangeColors('customLinearRange',$event);"
+          [checked]="getCheckedRadios('customLinearRange','calendarHeatmapcolors','customLinearRange', 'undefined', false)"
+          aria-describedby="custom-Linear-ColorRange-Calendar"
+        />
+        <span>{{ locale['Define a Custom Linear Color Range'] }}</span> </label
+      ><br />
+
+      <span id="custom-Linear-ColorRange-Calendar" class="txt-help-wrapper"
+        >{{ locale['In a linear range, define colors for minimum and maximum heat values. Colors for all the intermediate values are rendered automatically. Default label colors are used.'] }}</span
+      >
+    </div>
+
+    <div class="col-cls hide prop calendarHeatmapRangeLinear">
+      <div class="minMaxHeatDiv minHeatDiv">
+        <label id="MinHeatLabelCalendarHeatmap" class="control-label">{{ locale['Min Heat'] }}</label>
+        <color-picker
+          class="large"
+          [color]="getMinMaxHeatCalendarHeatmap('calendarMinHeat')"
+          [colorFormat]="colorFormat"
+          [showHtmlColorPicker]="true"
+          [UserDefinedColorRange] = "false"
+          (selectColor)="setMinMaxHeatCalendarHeatmap('calendarMinHeat',$event)"
+          (keydown.tab)="setFocus($event,true)"
+          aria-describedby="MinHeatLabelCalendarHeatmap"
+        ></color-picker>
+      </div>
+      <div class="minMaxHeatDiv maxHeatDiv max-heat-color-picker-calendar-heatmap">
+        <label id="MaxHeatLabelCalendarHeatmap" class="control-label">{{ locale['Max Heat'] }}</label>
+        <color-picker
+          class="large setFocus"
+          [color]="getMinMaxHeatCalendarHeatmap('calendarMaxHeat')"
+          [colorFormat]="colorFormat"
+          [showHtmlColorPicker]="true"
+          [UserDefinedColorRange] = "false"
+          (selectColor)="setMinMaxHeatCalendarHeatmap('calendarMaxHeat',$event)"
+          (keydown.tab)="setFocus($event,true)"
+          aria-describedby="MaxHeatLabelCalendarHeatmap"
+        ></color-picker>
+      </div>
+    </div>
+  </div>
+</ng-container>
