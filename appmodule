@@ -1,0 +1,353 @@
+import { BrowserModule, EventManager } from "@angular/platform-browser";
+import {
+  APP_INITIALIZER,
+  NgModule,
+  NO_ERRORS_SCHEMA,
+  LOCALE_ID,
+  TRANSLATIONS,
+  TRANSLATIONS_FORMAT,
+  MissingTranslationStrategy
+} from "@angular/core";
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+/*import { MatMenuModule, MdMenuModule, MdButtonModule,
+          MdCheckboxModule, MatButtonModule, MatCheckboxModule,
+          MdSidenavModule } from '@angular/material';*/
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+
+import { AppComponent } from "./app.component";
+import { TabStripComponent } from "./tab-strip/tab-strip.component";
+import { DashboardComponent } from "./dashboard/dashboard.component";
+import { NavbarComponent } from "./navbar/navbar.component";
+import { FilterbarComponent } from "./filterbar/filterbar.component";
+import { FilterComponent } from "./filterbar/filter/filter.component";
+import { DropdownComponent } from "./filterbar/dropdown/dropdown.component";
+import { BaseWidgetComponent } from "./base-widget/base-widget.component";
+import { TooltipModule } from "ngx-bootstrap/tooltip";
+import { CollapseModule } from "ngx-bootstrap/collapse";
+import { BsDropdownModule } from "ngx-bootstrap/dropdown";
+import { TabsModule } from "ngx-bootstrap/tabs";
+import { PopoverModule } from "ngx-bootstrap/popover";
+import { ModalModule } from "ngx-bootstrap/modal";
+import { BsModalService } from "ngx-bootstrap/modal";
+import { PaginationModule } from "ngx-bootstrap/pagination";
+import { AlertModule } from "ngx-bootstrap/alert";
+import { TabpanelComponent } from "./tabpanel/tabpanel.component";
+import { TabregisterService } from "./services/tabregister/tabregister.service";
+import { TabFactoryService } from "./services/tabfactory/tab-factory.service";
+import { DatamanagerService } from "./services/datamanager/datamanager.service";
+import { DashboardFactoryService } from "./services/dashboard/dashboard-factory.service";
+import { DashboardServiceService } from "./services/dashboard/dashboard-service.service";
+import { DynamicSubmenuComponent } from "./dynamic-submenu/dynamic-submenu.component";
+import { ViewContRefGetterDirective } from "./directives/view-cont-ref-getter.directive";
+import { WidgetComponent } from "./widgets/widget/widget.component";
+import { TemplateManagerComponent } from "./template-manager/template-manager.component";
+import { LayoutManagerComponent } from "./widgets/layout-manager/layout-manager.component";
+import { TabWidgetComponent } from "./widgets/tab-widget/tab-widget.component";
+import { ViewAnyChartDirective } from "./directives/view-any-chart.directive";
+import { ViewCanvasJsDirective } from "./directives/view-canvas-js.directive";
+import { ViewD3ChartDirective } from "./directives/view-d3-chart.directive";
+import { ViewFooterDirective } from "./directives/view-footer.directive";
+import { SlimScrollBarDirective } from "./directives/slim-scroll-bar.directive";
+import { MaterialModule } from "./material/material.module";
+import { DaolayerService } from "./services/daolayer/daolayer.service";
+import { DynamicChartServiceService } from "./services/dynmaic-chart/dynamic-chart-service.service";
+import { ClientSessionService } from "./services/utilities/client-session.service";
+
+import { PerfectScrollbarModule } from "ngx-perfect-scrollbar";
+import { PerfectScrollbarConfigInterface } from "ngx-perfect-scrollbar";
+import { RatingComponent } from "./rating/rating.component";
+import { EmailPdfComponent } from "./email-pdf/email-pdf.component";
+import { AddWidgetComponent } from "./add-widget/add-widget.component";
+import { DragDropWidgetsDirective } from "./directives/drag-drop-widgets.directive";
+import { DashboardStateManager } from "./services/dashboard/dashboardStateManager";
+import { CommonUtilityService } from "./services/utilities/common-utility.service";
+import { ImageDashboardDirective } from "./directives/image-dashboard.directive";
+import { ImageWidgetDirective } from "./directives/image-widget.directive";
+import { ImageCompositeDirective } from "./directives/image-composite.directive";
+import { CustomDialogComponent } from "./filterbar/custom-dialog/custom-dialog.component";
+import { TimePeriodService } from "./services/filterbar/timeperiod-service";
+import { FilterBarService } from "./services/filterbar/filterbar.service";
+import { FormatTimeService } from "./services/filterbar/formattime-service";
+import { DrilldownServiceService } from "./services/drilldown/drilldown-service.service";
+import { ParametersMaintenanceService } from "./services/drilldown/parameters-maintenance.service";
+import { EmailService } from "./services/email/email.service";
+import { CustomPopupComponent } from "./filterbar/custom-popup/custom-popup.component";
+import { CustomtooltipComponent } from "./custom-tooltip/customtooltip.component";
+import { RatingService } from "./services/rating/rating.service";
+import { TimepickerModule } from "ngx-bootstrap/timepicker";
+import { UpwordGravityWidgetDirective } from "./directives/upword-gravity-widget.directive";
+import { GenerateReportDirective } from "./directives/generate-report.directive";
+import { BsDatepickerModule } from "ngx-bootstrap/datepicker";
+/* import { GridChartComponent } from '../app/widgets/grid-chart/grid-chart.component'; */
+import { GridChartAgComponent } from "../app/widgets/grid-chart-ag/grid-chart-ag.component";
+import { WidgetRealtimeDataService } from "./services/realtime/widget-realtime-data.service";
+import { FilterbarFactoryService } from "./services/filterbar/filterbar-factory.service";
+import { WebsocketService } from "./services/websocket/websocket.service";
+import { UserPreferencesServiceService } from "./services/user-preferences/user-preferences-service.service";
+import { ThemePipe } from "./user-preferences/user-preference-theme.pipe";
+import { DashboardPipe } from "./custom-pages/scheduler/main-scheduler-component/main-schedule.pipe";
+import { I18nDirectiveDirective } from "./directives/i18n-directive.directive";
+import { TreeChartComponent } from "../app/widgets/tree-chart/tree-chart.component";
+// import * as d3 from 'd3';
+import { JSDATA_RESOURCE_CONFIGS, LOCALE_CONFIGS } from "./appconfiguration";
+import { Grid, GridCell } from "ag-grid-community";
+import { AgGridModule } from "ag-grid-angular";
+import { ProgressBarComponent } from "./widgets/grid-chart-ag/progress-Bar-Component/progress-bar.component";
+import { StatusRendererComponent } from "./widgets/grid-chart-ag/status-Renderer-Component/status-renderer.component";
+import { CustomCellRendererComponent } from "./widgets/grid-chart-ag/customCell-Renderer-Component/customcell-renderer.component";
+import {
+  I18n,
+  MISSING_TRANSLATION_STRATEGY
+} from "@ngx-translate/i18n-polyfill";
+import { WebWidgetComponent } from "../app/widgets/web-widget/web-widget.component";
+export declare const require: any;
+import { DashboardViewComponent } from "./dashboard-view/dashboard-view.component";
+import { CustomtooltipIconComponent } from "./custom-tooltip-Icons/customtooltip-icon.component";
+
+/* External library imports */
+/* Ag-Grid */
+/* import { AgGridModule } from 'ag-grid-angular/main'; */
+
+import { MainSchedulerComponent } from "./custom-pages/scheduler/main-scheduler-component/main-scheduler-component";
+import { CustomPageComponent } from "./custom-pages/custom-page/custom-page.component";
+
+import { BadgeWidgetComponent } from "./widgets/badge-widget/badge-widget.component";
+import { UserPreferencesComponent } from "./user-preferences/user-preferences.component";
+import { TexBoxFilterComponent } from "./filterbar/tex-box-filter/tex-box-filter.component";
+import { DatePickerCustomeComponent } from "./filterbar/date-picker-custom/date-picker-custom.component";
+import { DynamicChartComponent } from "./widgets/dynamic-chart/dynamic-chart.component";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { StyleSanitizerPipe } from "./pipes/style-sanitizer.pipe";
+import { SvgIconDirective } from "./directives/svg-icon.directive";
+import { GlobalMessageComponent } from "./global-message/global-message.component";
+import { SetFocusDirective } from "./directives/set-focus.directive";
+import { CustomPositionDirective } from "./directives/custom-position.directive";
+
+import { AppInitializerService } from "./services/appIntializer/app-intializer.service";
+import { I18UtilitiesService } from "./services/utilities/i18-utility.service";
+import { CustomEventManager } from "./custom-event-manager";
+import { ToolTipDirective } from "./directives/tool-tip.directive";
+import { CustomDatepickerComponent } from "./filterbar/custom-datepicker/custom-datepicker.component";
+import { ApplicationNameService } from "./services/applicationNameConfig/applicationNameConfig.service";
+import { AnychartUtilitiesService } from "./services/utilities/anychart-utilities.service";
+import { ThemeService } from "./services/theme/theme.service";
+import { TruncateStringPipe } from "./pipes/truncate-string.pipe";
+import { CustomDateDialogComponent } from "./filterbar/custom-date-dialog/custom-date-dialog.component";
+import { ClickOutsideDirective } from "./directives/click-outside.directive";
+import { EncodeHttpParamsInterceptor } from "./custom-http-interceptor";
+
+export function init_app(appInitializerService: AppInitializerService) {
+  return () => appInitializerService.initializeApp();
+}
+
+export function init_theme(appInitializerService: AppInitializerService) {
+  return () => appInitializerService.initializeTheme();
+}
+
+//import { TreeFlatOverviewExample } from '../app/widgets/tree-chart/tree-chart.component';
+
+const PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+  suppressScrollX: false,
+  suppressScrollY: false
+};
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    TabStripComponent,
+    DashboardComponent,
+    NavbarComponent,
+    FilterbarComponent,
+    FilterComponent,
+    DropdownComponent,
+    BaseWidgetComponent,
+    TabpanelComponent,
+    DynamicSubmenuComponent,
+    ViewContRefGetterDirective,
+    WidgetComponent,
+    TemplateManagerComponent,
+    LayoutManagerComponent,
+    TabWidgetComponent,
+    ViewAnyChartDirective,
+    ViewCanvasJsDirective,
+    ViewD3ChartDirective,
+    ViewFooterDirective,
+    SlimScrollBarDirective,
+    RatingComponent,
+    EmailPdfComponent,
+    DragDropWidgetsDirective,
+    ImageDashboardDirective,
+    ImageWidgetDirective,
+    ImageCompositeDirective,
+    CustomDialogComponent,
+    CustomPopupComponent,
+    CustomtooltipComponent,
+    UpwordGravityWidgetDirective,
+    GenerateReportDirective,
+    /* GridChartComponent, */
+    GridChartAgComponent,
+    ProgressBarComponent,
+    CustomCellRendererComponent,
+    StatusRendererComponent,
+    MainSchedulerComponent,
+    CustomPageComponent,
+    BadgeWidgetComponent,
+    AddWidgetComponent,
+    TexBoxFilterComponent,
+    DatePickerCustomeComponent,
+    UserPreferencesComponent,
+    ThemePipe,
+    DashboardPipe,
+    DynamicChartComponent,
+    I18nDirectiveDirective,
+    StyleSanitizerPipe,
+    TruncateStringPipe,
+    SvgIconDirective,
+    GlobalMessageComponent,
+    SetFocusDirective,
+    DashboardViewComponent,
+    WebWidgetComponent,
+    CustomtooltipIconComponent,
+    CustomPositionDirective,
+    ClickOutsideDirective,
+    ToolTipDirective,
+    TreeChartComponent,
+    CustomDatepickerComponent,
+    CustomDateDialogComponent
+  ],
+  imports: [
+    HttpClientModule,
+    BrowserModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AgGridModule.withComponents([]),
+    BsDatepickerModule.forRoot(),
+    TimepickerModule.forRoot(),
+    CollapseModule.forRoot(),
+    BsDropdownModule.forRoot(),
+    TabsModule.forRoot(),
+    // MdMenuModule, MdButtonModule, MdCheckboxModule, MatButtonModule, MatCheckboxModule, MdSidenavModule,
+    BrowserAnimationsModule,
+    // MatMenuModule
+    MaterialModule,
+    PopoverModule.forRoot(),
+    ModalModule.forRoot(),
+    PaginationModule.forRoot(),
+    PerfectScrollbarModule,
+    /* AgGridModule.withComponents([]), */
+    MatSidenavModule,
+    AlertModule.forRoot(),
+    TooltipModule.forRoot()
+  ],
+  providers: [
+    TabregisterService,
+    TabFactoryService,
+    DatamanagerService,
+    DashboardFactoryService,
+    DashboardStateManager,
+    BsModalService,
+    DashboardServiceService,
+    CommonUtilityService,
+    TimePeriodService,
+    FilterBarService,
+    DrilldownServiceService,
+    { provide: EventManager, useClass: CustomEventManager },
+    ParametersMaintenanceService,
+    EmailService,
+    RatingService,
+    WidgetRealtimeDataService,
+    WebsocketService,
+    FormatTimeService,
+    DynamicChartServiceService,
+    DaolayerService,
+    FilterbarFactoryService,
+    UserPreferencesServiceService,
+    I18UtilitiesService,
+    ClientSessionService,
+    ApplicationNameService,
+    AnychartUtilitiesService,
+    ThemeService,
+    { provide: TRANSLATIONS_FORMAT, useValue: "xlf" },
+    {
+      provide: TRANSLATIONS,
+      useFactory: locale => {
+        locale = LOCALE_CONFIGS.applicationLocale;
+
+        let adminLanguage: any;
+        $.ajax({
+          url: `${JSDATA_RESOURCE_CONFIGS.visget.basePath}LocalizationServlet?locale=${locale}`,
+          success: function(result) {
+            const jsonResult = JSON.parse(result);
+            adminLanguage = jsonResult[`admin-language.${locale}.xlf`];
+            const parser = new DOMParser();
+            adminLanguage = parser.parseFromString(adminLanguage, "text/xml");
+            for (const key in jsonResult) {
+              if (key !== `admin-language.${locale}.xlf`) {
+                const parser2 = new DOMParser();
+                const xmlDoc = parser2.parseFromString(
+                  jsonResult[key],
+                  "text/xml"
+                );
+                $(xmlDoc)
+                  .find("body")
+                  .find("trans-unit")
+                  .each(function(key, val) {
+                    $(adminLanguage)
+                      .find("body")
+                      .append(val);
+                  });
+              }
+            }
+          },
+          async: false
+        });
+        ApplicationNameService.prototype.getApplicationName();
+        let strLanguage = "";
+        if (adminLanguage !== undefined) {
+          strLanguage = new XMLSerializer().serializeToString(adminLanguage);
+        }
+
+        return strLanguage;
+        // return require(`raw-loader!../locale/admin-language.en.xlf`);
+      },
+      deps: [LOCALE_ID]
+    },
+    { provide: LOCALE_ID, useValue: "en" },
+    {
+      provide: MISSING_TRANSLATION_STRATEGY,
+      useValue: MissingTranslationStrategy.Error
+    },
+    I18n,
+    AppInitializerService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: init_app,
+      deps: [AppInitializerService],
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: init_theme,
+      deps: [AppInitializerService],
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: EncodeHttpParamsInterceptor,
+      multi: true
+    }
+  ],
+  schemas: [NO_ERRORS_SCHEMA],
+  // exports: [MdMenuModule, MdButtonModule, MdCheckboxModule, MatButtonModule, MatCheckboxModule, MdSidenavModule, MatMenuModule],
+  bootstrap: [AppComponent],
+  entryComponents: [
+    DynamicSubmenuComponent,
+    ProgressBarComponent,
+    StatusRendererComponent,
+    CustomCellRendererComponent,
+    CustomDatepickerComponent,
+    CustomDateDialogComponent
+  ]
+})
+export class AppModule {}
