@@ -1,0 +1,517 @@
+package com.psl.servlet;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.persistent.prd.connector.PrdConnector;
+import com.persistent.oed.container.factory.resource.RestFullConf;
+import com.psl.dal.DataAccessLayer;
+import com.psl.dal.https.client.CookieJar;
+import com.psl.dal.https.client.HttpsClientForPrdConnector;
+import com.psl.dal.https.client.HttpsClientForTool;
+import com.psl.utils.CommonUtils;
+import com.psl.utils.HTMLSanitizer;
+import com.psl.utils.TenantUtil;
+
+/**
+ * Servlet implementation class PrdConnectorServlet
+ */
+public class PrdConnectorServlet extends HttpServlet {
+	
+	// Should have an entry in DBDATASOURCES table, with connection key as both the below values 
+	
+	private static final String CONFIGSERVICE_GET = "prdConnectorConfigGET";
+	private static final String CONFIGSERVICE_POST = "prdConnectorConfigPOST";
+	private static final String CONFIGSERVICE_PUT = "prdConnectorConfigPUT";
+	private static final String CONFIGSERVICE_DELETE = "prdConnectorConfigDELETE";
+	private static final String DATASERVICE_GET = "prdConnectorDataGET";
+	private static final String DATASERVICE_POST = "prdConnectorData";
+	private static final String DATASERVICE_TEST_CONNECTION_GET = "prdConnectorTestConnection";
+	
+	// KEYS FOR ENGINE CONNECTORS
+	private static final String ENG_CON_CONFIGSERVICE_GET = "engineConnectorConfigGET";
+	private static final String ENG_CON_CONFIGSERVICE_POST = "engineConnectorConfigPOST";
+	private static final String ENG_CON_CONFIGSERVICE_PUT = "engineConnectorConfigPUT";
+	private static final String ENG_CON_CONFIGSERVICE_DELETE = "engineConnectorConfigDELETE";
+	private static final String ENG_CON_DATASERVICE_GET = "engineConnectorDataGET";
+	private static final String ENG_CON_DATASERVICE_POST = "engineConnectorData";
+	private static final String ENG_CON_TEST_CONNECTION_POST = "engineConnectorTestConnectionPOST";
+	private static final String ENG_CON_TEST_CONNECTION_GET = "engineConnectorTestConnectionGET";
+	//private static final String ENG_CON_OMNI_BUS_SERVICE_POST = "engineConnectorOmniPOST";
+	private static final String PATH_POST = "/";
+	
+	public JSONArray connectors = new JSONArray();
+	public boolean isTestConnectionCall = false;
+	private static final Logger logger = LoggerFactory.getLogger(PrdConnectorServlet.class.getName());	
+	String CONNECTOR_FRAMEWORK = new String();
+    public PrdConnectorServlet() {
+        super();
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		HttpServletRequest httpReq = (HttpServletRequest) request;
+		HttpSession session = httpReq.getSession();
+		
+		final String userLocale = request.getHeader("Accept-Language");
+		String browserLang = userLocale.split(",")[0];
+		
+		String tenantName = HTMLSanitizer.escapeHTMLCharacterFromString(session.getAttribute("tenantname").toString());
+		String tenantId = "";
+		try{
+			tenantId = HTMLSanitizer.escapeHTMLCharacterFromString(TenantUtil.getTenantId(tenantName).toString());
+		}catch(Exception e) {
+			tenantId = "DEFAULT";
+			logger.error("Error in fetching Tenant Id................. ", e);
+		}
+		
+		request.setCharacterEncoding("UTF-8");
+		
+		logger.debug("Connector GET request for tenant: " + tenantId);
+		String connectorURI = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("connectorURI"));
+		String connectorType = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_TYPE"));
+		String sourceName = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("SOURCE_NAME"));
+		String query = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("QUERY"));		
+		String CONNECTOR_FRAMEWORK = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_FRAMEWORK"));
+		// Code to get TenantId for Store and Assisted Data Definition
+		if(connectorURI.equalsIgnoreCase("tenant")){
+			try{
+				response.getWriter().write("{\"TENANT_ID\":\"" + HTMLSanitizer.escapeHTMLCharacterFromString(tenantId) +"\"}");
+			}catch(Exception e){
+				logger.error("[Exception] Problem Occurred: doGet ", e);
+			}
+		}else{
+			this.isTestConnectionCall = false;
+			ArrayList<String> paramsList = new ArrayList<String>();
+			
+			String queryString = "";
+			if(tenantId != null){
+				paramsList.add("TENANT_ID=" + tenantId);
+			}		
+			if(connectorType != null){
+				paramsList.add("CONNECTOR_TYPE=" + connectorType);
+			}
+			if(sourceName != null){
+				paramsList.add("SOURCE_NAME=" + sourceName);
+			}
+			if(query != null){
+				paramsList.add("QUERY="+ query);
+			}	
+			
+			queryString = "?" + String.join("&", paramsList);
+			
+			String prdUrl = new StringBuilder(PATH_POST).append(connectorURI).append(queryString).toString();
+			String postBody = "";
+			String response_data = "";
+			try {			
+				JSONObject postBodyObj = new JSONObject();
+				if(tenantId != null){
+					postBodyObj.put("TENANT_ID", tenantId);
+				}
+				if(connectorType != null){
+					postBodyObj.put("CONNECTOR_TYPE", connectorType);
+				}
+				if(sourceName != null){
+					postBodyObj.put("SOURCE_NAME", sourceName);
+				}	
+				if(query != null){
+					postBodyObj.put("QUERY", query);
+				}
+				//postBodyObj = CommonUtils.escapeHtmlInValues(postBodyObj);
+				//postBody = postBodyObj.toString();
+				if(postBody != null){
+					JSONObject prddata = new JSONObject();
+					JSONObject engineConnectorData = new JSONObject();
+					JSONObject respObj = new JSONObject();
+					// If condition to handle all the post request of PRD and Engine Connector
+					if(query != null){
+						logger.debug("query", query);
+						respObj = this.getConnectorData(DATASERVICE_POST, prdUrl, postBodyObj, request, browserLang);
+					}else{ 	// Else condition to handle all the get request of PRD and Engine Connector
+						if(connectorType == null && sourceName == null){ // GET ALL
+							prddata = this.getConnectorData(CONFIGSERVICE_GET, prdUrl, postBodyObj, request, browserLang);
+							engineConnectorData = this.getConnectorData(ENG_CON_CONFIGSERVICE_GET, prdUrl, postBodyObj, request, browserLang);
+						}else if(checkConnectorFrameworkType(connectorType,CONNECTOR_FRAMEWORK).equalsIgnoreCase("engineconn")){ // GET ENGINE CONNECTORS 
+							engineConnectorData = this.getConnectorData(ENG_CON_CONFIGSERVICE_GET, prdUrl, postBodyObj, request, browserLang);
+						} else { // not having fix key for PRD connector now hense added in else block
+							prddata = this.getConnectorData(CONFIGSERVICE_GET, prdUrl, postBodyObj, request, browserLang);
+						}
+
+						JSONArray prdResArr = new JSONArray();
+
+						JSONArray engineResArr = new JSONArray();
+						boolean isPRDConnectorHasData = false;
+						boolean isEngineConnectorHasData = false;
+						if(prddata.length() != 0){
+							response_data = prddata.get("response_data").toString();
+							respObj.put("response_code", prddata.get("response_code"));
+							if(!response_data.isEmpty()){
+								prdResArr = new JSONArray(response_data);
+								isPRDConnectorHasData = true;	
+							}
+						}
+						if(engineConnectorData.length() != 0){
+							response_data = engineConnectorData.get("response_data").toString();
+							respObj.put("response_code", engineConnectorData.get("response_code"));
+							if(!response_data.isEmpty()){
+								engineResArr = new JSONArray(response_data);
+								isEngineConnectorHasData = true;	
+							}
+						}
+						
+						// addAll method was not available in current JSONArray package
+						int engineResLength = engineResArr.length();
+						for(int i= 0;i<engineResLength ;i++){
+							prdResArr.put(engineResArr.getJSONObject(i));
+						}
+						// checked if connector framework avail in response 
+						if((isPRDConnectorHasData && prddata.has("response_data") 
+								&& prdResArr.length() > 0 && prdResArr.getJSONObject(prdResArr.length() - 1).has("CONNECTOR_FRAMEWORK"))
+							|| (isEngineConnectorHasData && engineConnectorData.has("response_data") 
+									&& engineResArr.length()> 0  && engineResArr.getJSONObject(engineResArr.length() - 1).has("CONNECTOR_FRAMEWORK"))){
+							this.connectors = prdResArr;
+						}
+						respObj.put("response_data", prdResArr);							
+					}																		
+
+					String respData = respObj.get("response_data").toString();
+					if(respData.length() == 0){
+						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{response_data: [], response_code: 500}");
+					}else{
+						response.setCharacterEncoding("UTF-8");
+						response.setContentType("application/json;charset=UTF-8");
+						response.getWriter().write(HTMLSanitizer.escapeHTMLCharacterFromString(respObj.toString()));
+					}					
+				}
+			} catch (JSONException e) {
+				logger.error("[JSONException] Problem Occurred doGet== ", e);
+				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{response_data: [], response_code: 500}");
+			}
+		}	
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType("application/json;charset=UTF-8");
+		
+		logger.debug(request.getParameterNames().toString());
+		HttpServletRequest httpReq = (HttpServletRequest) request;
+		HttpSession session = httpReq.getSession();
+		final String userLocale = request.getHeader("Accept-Language");
+		String browserLang = userLocale.split(",")[0];
+		
+		request.setCharacterEncoding("UTF-8");
+		
+		// Get tenant from session, for multiTenant feature
+		String tenantName = HTMLSanitizer.escapeHTMLCharacterFromString(session.getAttribute("tenantname").toString());
+		String tenantId = "";
+		try{
+			tenantId = HTMLSanitizer.escapeHTMLCharacterFromString(TenantUtil.getTenantId(tenantName).toString());
+		}catch(Exception e) {
+			tenantId = "DEFAULT";
+			logger.error("[Exception] Error in fetching Tenant Id................. ", e);
+		}		
+		logger.debug("Connector POST request for tenant: " + tenantId);
+		String connectorURI = "";
+		String subAction = "";
+		if(request.getParameter("connectorURI")!=null) {
+			connectorURI = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("connectorURI"));
+		} 
+		if(request.getParameter("SUBACTION")!=null) {
+			subAction = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("SUBACTION"));
+		} 
+		String connectorType =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_TYPE"));
+		String sourceName =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("SOURCE_NAME"));
+		//omnibus param added by
+
+		 String method =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("METHOD"));
+		 String postReqBody =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("POST_REQUEST_BODY"));
+		 String uri =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("URI"));
+		 String toolCSRFID =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("TOOLCSRFID"));
+		 this.CONNECTOR_FRAMEWORK = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_FRAMEWORK"));
+		//end
+		String sourceProperties = null;
+		String connectorDisplayName =null;
+		String action = "";
+		String query = null;
+		if(!connectorURI.equalsIgnoreCase("testconnection")){
+			sourceProperties =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("PROPERTY_VAL"));
+			connectorDisplayName =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_DISPLAY_NAME"));
+			query =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("QUERY"));
+		}		
+
+		action =  HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("ACTION"));
+		String prdUrl = "";
+		// In case of delete send parameters as QueryString
+		String queryString = "";
+		if(action.equalsIgnoreCase("del")){
+			queryString = new StringBuilder("?TENANT_ID=").append(tenantId).append("&CONNECTOR_TYPE=").append(connectorType).append("&SOURCE_NAME=").append(sourceName).toString();
+			prdUrl = new StringBuilder(PATH_POST).append(connectorURI).append(queryString).toString();			
+		}else if(query == null){
+			prdUrl = new StringBuilder(PATH_POST).append(connectorURI).toString();
+		}
+
+		String postBody = "";
+		try {			
+			JSONObject postBodyObj = new JSONObject();
+			postBodyObj.put("TENANT_ID", tenantId);
+			if(request.getParameter("PROPERTIES")!=null) {
+				postBodyObj.put("PROPERTIES", new JSONArray(request.getParameter("PROPERTIES")));
+			}
+			if(connectorType != null){
+				postBodyObj.put("CONNECTOR_TYPE", connectorType);
+			}		
+			if(connectorDisplayName != null){
+				postBodyObj.put("CONNECTOR_DISPLAY_NAME", connectorDisplayName);
+			}
+			if(sourceName != null){
+				postBodyObj.put("SOURCE_NAME", sourceName);
+			}
+			if(query != null){
+				postBodyObj.put("QUERY", query);
+			}			
+			
+			//Add properties as Array object if action is not deleted
+			if(!action.equalsIgnoreCase("del")){
+				if(sourceProperties != null){
+					JSONArray array = new JSONArray(sourceProperties);
+					postBodyObj.put("PROPERTIES", (Object)array);
+				}
+			}
+
+			logger.debug("PostBody :: {}",postBodyObj.toString());
+			logger.debug("PostBody URL :: {}",prdUrl);
+			this.isTestConnectionCall = false;
+			if(postBody != null){
+				String data = "";
+				if(checkConnectorFrameworkType(connectorType,this.CONNECTOR_FRAMEWORK).equalsIgnoreCase("engineconn")){ // GET ENGINE CONNECTORS
+					if(action.equalsIgnoreCase("post") && connectorURI.equalsIgnoreCase("testconnection")){
+						if(!subAction.isEmpty() && subAction.equalsIgnoreCase("MANAGE_TEST_CONNECTION")){ // testing connection using get method for engine connector from data Grid.
+							this.isTestConnectionCall = true;
+							data = getDataFromPrdConnector(ENG_CON_TEST_CONNECTION_GET, prdUrl, postBodyObj, captureCookies(request), browserLang);
+						} else  { // testing connection using get method for engine connector from POST Body of add sources.
+							data = getDataFromPrdConnector(ENG_CON_TEST_CONNECTION_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);	
+						}
+					}else if(action.equalsIgnoreCase("post") && query != null){
+						data = getDataFromPrdConnector(ENG_CON_DATASERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}else if(action.equalsIgnoreCase("post")){
+						//data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);
+						if(connectorType.equalsIgnoreCase("omnibus_restapi")) {
+							if(method != null && postReqBody != null && uri != null && toolCSRFID != null){
+								postBodyObj.put("METHOD", method);
+								postBodyObj.put("POST_REQUEST_BODY", postReqBody);
+								postBodyObj.put("URI", uri);
+								postBodyObj.put("TOOLCSRFID", toolCSRFID);
+								data = getDataFromPrdConnector(ENG_CON_DATASERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);//assited dd page 
+							} else {
+							data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);//ENG_CON_DATASERVICE_POST
+							}
+						}else if(connectorType.equalsIgnoreCase("cem_restapi") && !connectorURI.equalsIgnoreCase("testconnection")) {
+							if (method != null && uri != null && toolCSRFID != null && postReqBody == null ) {
+								postBodyObj.put("METHOD", method);
+								postBodyObj.put("URI", uri);
+								postBodyObj.put("TOOLCSRFID", toolCSRFID);
+								data = getDataFromPrdConnector(ENG_CON_DATASERVICE_POST, prdUrl, postBodyObj,
+										captureCookies(request), browserLang);// assited dd page
+							}  else {
+								data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);//ENG_CON_DATASERVICE_POST
+								}
+						} 
+						
+						else {
+							data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);
+						}
+					}else if(action.equalsIgnoreCase("put")){
+						data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_PUT, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}else if(action.equalsIgnoreCase("del")){
+						data = getDataFromPrdConnector(ENG_CON_CONFIGSERVICE_DELETE, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}	
+				} else {
+					if(action.equalsIgnoreCase("post") && connectorURI.equalsIgnoreCase("testconnection")){
+						if(!subAction.isEmpty() && subAction.equalsIgnoreCase("MANAGE_TEST_CONNECTION")){ // testing connection using get method for PRD connector from data Grid.
+							this.isTestConnectionCall = true;
+							data = getDataFromPrdConnector(DATASERVICE_TEST_CONNECTION_GET, prdUrl, postBodyObj, captureCookies(request), browserLang);
+						}else { // testing connection using get method for PRD connector from POST Body of add sources.
+							data = getDataFromPrdConnector(DATASERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);	
+						}
+					}else if(action.equalsIgnoreCase("post") && query != null){
+						data = getDataFromPrdConnector(DATASERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}else if(action.equalsIgnoreCase("post")){
+						data = getDataFromPrdConnector(CONFIGSERVICE_POST, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}else if(action.equalsIgnoreCase("put")){
+						data = getDataFromPrdConnector(CONFIGSERVICE_PUT, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}else if(action.equalsIgnoreCase("del")){
+						data = getDataFromPrdConnector(CONFIGSERVICE_DELETE, prdUrl, postBodyObj, captureCookies(request), browserLang);
+					}
+				}
+				JSONObject respObj = new JSONObject(data);
+				String respData =  HTMLSanitizer.escapeHTMLCharacterFromString(respObj.get("response_data").toString());
+				if(respData.length() == 0){
+					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{response_data: [], response_code: 500}");
+				}else{
+					response.getWriter().write(HTMLSanitizer.escapeHTMLCharacterFromString(data));
+				}
+			}
+		} catch (JSONException e) {
+			logger.error("[JSONException] Problem Occurred", e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{response_data: [], response_code: 500}");
+		}
+	}
+	
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		logger.debug(request.getParameterNames().toString());
+		String connectorURI = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("connectorURI"));
+		String tenantId = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("TENANT_ID"));
+		String connectorType = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_TYPE"));
+		String sourceName = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("SOURCE_NAME"));
+		String sourceProperties = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("PROPERTY_VAL"));
+		String queryString = new StringBuilder("?TENANT_ID=").append(tenantId).append("&CONNECTOR_TYPE=").append(connectorType).append("&SOURCE_NAME=").append(sourceName).toString();
+		String prdUrl = new StringBuilder(PATH_POST).append(connectorURI).append(queryString).toString();
+		
+		final String userLocale = request.getHeader("Accept-Language");
+		String browserLang = userLocale.split(",")[0];
+		
+		request.setCharacterEncoding("UTF-8");
+		
+		String postBody = "";
+		try {
+			JSONObject pBody = new JSONObject(sourceProperties);
+			JSONArray array = new JSONArray();
+			array.put(pBody);
+			logger.debug("PostBody :: {}",pBody);
+			
+			JSONObject postBodyObj = new JSONObject();
+			postBodyObj.put("TENANT_ID", tenantId);
+			postBodyObj.put("CONNECTOR_TYPE", connectorType);
+			postBodyObj.put("SOURCE_NAME", sourceName);
+			postBodyObj.put("PROPERTIES", array);
+			postBodyObj.put("METHOD", "GET");
+			//postBodyObj = CommonUtils.escapeHtmlInValues(postBodyObj);
+			//postBody = postBodyObj.toString();
+			if(postBody != null){
+				String data = getDataFromPrdConnector(CONFIGSERVICE_PUT, prdUrl, postBodyObj, captureCookies(request), browserLang);
+				response.setCharacterEncoding("UTF-8");
+				response.setContentType("application/json;charset=UTF-8");
+				response.getWriter().write(HTMLSanitizer.escapeHTMLCharacterFromString(data));
+			}
+		} catch (JSONException e) {
+			logger.error("Problem Occurred", e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{Error:" + e.toString() + "}");
+		}		
+	}
+	
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		logger.debug(request.getParameterNames().toString());
+		String connectorURI = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("connectorURI"));
+		String tenantId = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("TENANT_ID"));
+		String connectorType = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("CONNECTOR_TYPE"));
+		String sourceName = HTMLSanitizer.escapeHTMLCharacterFromString(request.getParameter("SOURCE_NAME"));
+		String queryString = new StringBuilder("?TENANT_ID=").append(tenantId).append("&CONNECTOR_TYPE=").append(connectorType).append("&SOURCE_NAME=").append(sourceName).toString();
+		String prdUrl = new StringBuilder(PATH_POST).append(connectorURI).append(queryString).toString();
+		String postBody = "";
+		final String userLocale = request.getHeader("Accept-Language");
+		String browserLang = userLocale.split(",")[0];
+		request.setCharacterEncoding("UTF-8");
+		
+		try {
+			JSONObject postBodyObj = new JSONObject(postBody);
+			//postBodyObj = CommonUtils.escapeHtmlInValues(postBodyObj);
+			postBody = postBodyObj.toString();
+			if(postBody != null){
+				String data = getDataFromPrdConnector(CONFIGSERVICE_DELETE, prdUrl, postBodyObj, captureCookies(request), browserLang);
+				response.setCharacterEncoding("UTF-8");
+				response.setContentType("application/json;charset=UTF-8");
+				response.getWriter().write(HTMLSanitizer.escapeHTMLCharacterFromString(data));
+			}
+		} catch (JSONException e) {
+			logger.error("Problem Occurred", e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{Error:" + e.getMessage() + "}");
+		}		
+	}
+	
+	private String getDataFromPrdConnector(String datasource, String path, JSONObject postBody, CookieJar cookies, String lang){
+		String dataFromConnector = "";
+		Object connO;
+		try {
+				connO = DataAccessLayer.getDataSource(datasource);
+				if(connO instanceof PrdConnector){
+					PrdConnector prdO = (PrdConnector)connO;
+					HttpsClientForPrdConnector obj = new HttpsClientForPrdConnector(path, null, prdO, cookies, postBody, null, lang);
+					if(this.isTestConnectionCall){ // for test connection call for manage screen
+						obj.isTestConnectionCall = true;	
+					}
+					dataFromConnector = obj.getData();
+				}
+		} catch (Exception e) {
+			logger.error("[Exception] Problem Occurred", e);
+		}
+		return dataFromConnector;
+	}
+	
+	public CookieJar captureCookies(HttpServletRequest request) {
+		CookieJar cookies = new CookieJar();
+		Cookie cookieCollection[] = request.getCookies();
+		for(int i=0;i<cookieCollection.length;i++) {
+			cookies.addCookieToHashMap(cookieCollection[i]);
+		}
+		return cookies;
+	}
+	private String checkConnectorFrameworkType(String connType,String connFramework) throws JSONException{
+		if(connType == null){
+			return "";
+		}
+		String rtnFlag = "NO_MATCH_FOR_CONNECTOR_FRAMEWORK";
+		JSONObject jsonObject;
+		for(int index = 0; index < this.connectors.length(); index++) {
+			 jsonObject = this.connectors.getJSONObject(index);
+				if((jsonObject.has("CONNECTOR_TYPE") && jsonObject.getString("CONNECTOR_TYPE").equalsIgnoreCase(connType))){
+				if(!connFramework.isEmpty() && (jsonObject.has("CONNECTOR_FRAMEWORK") &&  jsonObject.getString("CONNECTOR_FRAMEWORK").equalsIgnoreCase(connFramework))){
+					if(jsonObject.has("CONNECTOR_FRAMEWORK")){
+						rtnFlag = jsonObject.getString("CONNECTOR_FRAMEWORK"); // returning connector framework value	
+						break;
+					}	
+				}
+				if(jsonObject.has("CONNECTOR_FRAMEWORK")){
+					rtnFlag = jsonObject.getString("CONNECTOR_FRAMEWORK"); // returning connector framework value	
+					break;
+				}
+			}
+		}
+		return rtnFlag;
+	}
+
+	/*
+	 * This method wrote for catch handled even if the connector server is stop state 
+	 * even in case of connector server is in sleep mode still 
+	 * if PRD is server is down then must return engine connector data if engine is down PRD or else both sleep then error (catch) state
+	 * */
+	@SuppressWarnings("finally")
+	private JSONObject getConnectorData(String configURL,String prdUrl,JSONObject postBodyObj,HttpServletRequest request,String browserLang){
+		String connectorData = "";
+		JSONObject connectorJSON = new JSONObject();
+		try{
+				connectorData = getDataFromPrdConnector(configURL, prdUrl, postBodyObj, captureCookies(request), browserLang);
+				if(!connectorData.isEmpty()){
+					connectorJSON = new JSONObject(connectorData);
+				}
+		}catch(Exception ex){
+			logger.error("Error Parsing JSON @PrdConnectorServet_getConnectorData::: connectorData = "+ connectorData);
+			logger.error("Problem Occurred@PrdConnectorServet_getConnectorData:::", ex);
+		} finally{
+			return connectorJSON;
+		}
+	}
+}
