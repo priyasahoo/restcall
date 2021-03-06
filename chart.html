@@ -1,0 +1,2150 @@
+<ng-container>
+  <ng-container
+    *ngTemplateOutlet="initiateTemplate; context: { $implicit: Tooldata}"
+  ></ng-container>
+</ng-container>
+
+<ng-template #initiateTemplate let-nodeData>
+  <ng-container *ngFor="let data of nodeData">
+    <ng-container
+      *ngTemplateOutlet="templateNodeType; context: { $implicit: data, nodeData: data }"
+    ></ng-container>
+    <!-- <div [ngSwitch]="data.nodeType">
+      
+        <div *ngSwitchCase="'tab'">
+            <ng-container *ngTemplateOutlet="chartPropertyTab; context: { $implicit: data.tab}"></ng-container>
+      </div>
+      
+     </div> -->
+  </ng-container>
+</ng-template>
+
+<ng-template #chartPropertyTab let-tabData>
+  <ng-container *ngIf="tabData.tabType == 'horizontal'">
+    <ng-container
+      *ngTemplateOutlet="chartPropertyTabHorizontal; context: { $implicit: tabData}"
+    ></ng-container>
+  </ng-container>
+  <ng-container *ngIf="tabData.tabType == 'vertical'">
+    <ng-container
+      *ngTemplateOutlet="chartPropertyTabVertical; context: { $implicit: tabData}"
+    ></ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #tabContent let-tabDetails let-index="index">
+  <div
+    attr.id="{{tabDetails.displayID}}"
+    class="tab-pane fade in"
+    [class.active]="index == 0"
+  >
+    <!-- <ng-container *ngIf="tabDetails.tabTitle == 'toolbar'"> -->
+    <ng-container *ngFor="let formtab of tabDetails.tabContent; let i = index;">
+      <div
+        *ngIf="formtab.tabDescription !== undefined"
+        class="txt-help txt-help-wrapper tabDescription"
+      >
+        <!--	<img alt="Help Icon" class="ico help-txt-ico" src="/designertool/images/ico-transparent.png"> -->
+        <span class="{{ formtab.spanClass }}">{{ locale[formtab.tabDescription] }}</span>
+        <div class="clearfix"></div>
+      </div>
+
+      <ng-container
+        *ngTemplateOutlet="templateNodeType; context: { $implicit: formtab, nodeData: formtab }"
+      ></ng-container>
+      <!-- <ng-container [ngSwitch]="formtab.nodeType">
+          <ng-container *ngSwitchCase="'form'"> 
+          <ng-container *ngTemplateOutlet="formpropertyTab; context: { $implicit: formtab}"></ng-container>
+        </ng-container>
+        <ng-container *ngSwitchCase="'tab'">
+          <ng-container *ngTemplateOutlet="chartPropertyTab; context: { $implicit: formtab.tab}"></ng-container>
+        </ng-container>
+        <ng-container *ngSwitchCase="'collapsetab'">
+          <ng-container *ngTemplateOutlet="columnProperty; context: { $implicit: formtab}"></ng-container>
+
+
+          </ng-container>
+      </ng-container>	 -->
+    </ng-container>
+
+    <!-- </ng-container> -->
+  </div>
+</ng-template>
+
+<!-- start horizontal tab template -->
+<ng-template #chartPropertyTabHorizontal let-tabData>
+  <div
+    class="tab-wrapper tab-secondery"
+    role="navigation"
+    aria-label="main navigation"
+  >
+    <ul class="nav nav-tabs navFirst">
+      <li
+        *ngFor="let tab of tabData.tabs; let i = index;"
+        [class.active]="i==0"
+        id="{{tab.tabId? tab.tabId : 'tab'+i}}"
+      >
+        <a data-toggle="tab" href="#{{ tab.displayID }}">{{ locale[tab.tabTitle] }}</a
+        >
+      </li>
+    </ul>
+    <div class="tab-content">
+      <ng-container
+        *ngFor="let tab of tabData.tabs; let i = index;"
+        data-toggle="tab"
+      >
+        <ng-container
+          *ngTemplateOutlet="tabContent; context: { $implicit: tab, index : i}"
+        ></ng-container>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+<!-- end horizontal tab template -->
+
+<!-- start vertical tab template -->
+<ng-template #chartPropertyTabVertical let-tabData>
+  <!-- <div id="chart" class="tab-pane fade"> -->
+  <div class="tab-content-inner">
+    <fieldset class="fieldset-default ">
+      <legend aria-hidden="true" class="sr-only">Properties</legend>
+      <div class="row wrapper-vertical-tab">
+        <div class="col col-xs-12">
+          <div
+            class="tabbable tabs-left"
+            role="navigation"
+            aria-label="side navigation"
+          >
+            <ul class="nav nav-tabs navDown">
+              <li
+                *ngFor="let tab of tabData.tabs; let i = index;"
+                [class.active]="i==0"
+              >
+                <a
+                  id="widgetProperty-{{i}}-{{tab.tabTitle}}"
+                  data-toggle="tab"
+                  href="#{{ tab.tabTitle }}">{{ locale[tab.displayID] }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col col-xs-48">
+          <div class="tab-content  tab-content-chart">
+            <div
+              *ngFor="let tab of tabData.tabs;let i = index;"
+              [class.active]="i==0"
+              class="tab-pane"
+              attr.id="{{ tab.tabTitle }}"
+            >
+              <div
+                class="tab-content-inner"
+                role="form"
+                attr.aria-label="{{ tab.tabTitle }}"
+              >
+                <div class="tab-pane-inner">
+                  <div
+                    *ngIf="tab.tabDescription !== undefined"
+                    class="txt-help txt-help-wrapper tabDescription"
+                  >
+                    <!-- <img alt="Help Icon" class="ico help-txt-ico" src="/designertool/images/ico-transparent.png"> --><span
+                    id="tabdescription-Span"  class="{{ tab.spanClass }}">{{ locale[tab.tabDescription] }}</span>
+                    <div class="clearfix"></div>
+                  </div>
+
+                  <ng-container
+                    *ngFor="let formtab of tab.tabContent; let i = index;"
+                  >
+                    <ng-container
+                      *ngTemplateOutlet="templateNodeType; context: { $implicit: formtab, nodeData: formtab }"
+                    ></ng-container>
+
+                    <!-- <ng-container [ngSwitch]="formtab.nodeType">
+
+               <ng-container *ngSwitchCase="'form'"> 
+              
+              <ng-container *ngTemplateOutlet="formpropertyTab; context: { $implicit: formtab }"></ng-container>
+            </ng-container>
+            <ng-container *ngSwitchCase="'tab'">
+              
+              <ng-container *ngTemplateOutlet="chartPropertyTab; context: { $implicit: formtab.tab}"></ng-container>
+            </ng-container>
+            <ng-container *ngSwitchCase="'collapse'">
+              <ng-container *ngTemplateOutlet="columnProperty; context: { $implicit: formtab}"></ng-container>
+            </ng-container>
+            <ng-container *ngSwitchCase="'formHorizontal'">
+              <ng-container *ngTemplateOutlet="chartPropertyTabHorizontal context: { $implicit: formtab}"></ng-container>
+            </ng-container> 
+          
+            </ng-container>	 -->
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+    </fieldset>
+  </div>
+</ng-template>
+<!-- end vertical tab template -->
+
+<!-- start inputs switch cases base on input type -->
+<ng-template #formInputs let-inputData let-colapsTabIndex="colapsTabIndex">
+  <ng-container [ngSwitch]="inputData.type">
+    <ng-container *ngSwitchCase="'text'">
+      <ng-container
+        *ngTemplateOutlet="inputText; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'checkbox'" class="check">
+      <ng-container
+        *ngTemplateOutlet="inputcheckbox context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'textarea'">
+      <ng-container
+        *ngTemplateOutlet="inputtextarea context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'radio'">
+      <ng-container
+        *ngTemplateOutlet="inputradio context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'select'">
+      <ng-container
+        *ngTemplateOutlet="inputselect context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'number'">
+      <ng-container
+        *ngTemplateOutlet="inputnumber context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'inputRow'">
+      <ng-container
+        *ngTemplateOutlet="inputRow context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'component'">
+      <ng-container
+        *ngTemplateOutlet="component context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'horizontalRow'">
+      <ng-container
+        *ngTemplateOutlet="horizontalRow context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'horizontalRowKPI'">
+        <ng-container
+          *ngTemplateOutlet="horizontalRowKPI context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+        ></ng-container>
+      </ng-container>
+    <ng-container *ngSwitchCase="'panel'">
+      <ng-container
+        *ngTemplateOutlet="panel context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'article'">
+      <ng-container
+        *ngTemplateOutlet="article context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'articleGis'">
+        <ng-container
+          *ngTemplateOutlet="articleGis context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+        ></ng-container>
+      </ng-container>
+    <ng-container *ngSwitchCase="'collapsetab'">
+      <ng-container
+        *ngTemplateOutlet="columnProperty; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'color'">
+      <ng-container
+        *ngTemplateOutlet="inputColor; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'colorLarge'">
+      <ng-container
+        *ngTemplateOutlet="inputColorLarge; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'colorRange'">
+      <ng-container
+        *ngTemplateOutlet="colorRange; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'colorRangeGis'">
+        <ng-container
+          *ngTemplateOutlet="colorRangeGis; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+        ></ng-container>
+      </ng-container>
+      <ng-container *ngSwitchCase="'InfoText'">
+      <ng-container
+        *ngTemplateOutlet="InfoText; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'heading'">
+      <ng-container
+        *ngTemplateOutlet="heading; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'colorPicker'">
+        <ng-container
+          *ngTemplateOutlet="colorPicker; context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+        ></ng-container>
+      </ng-container>
+    </ng-container>
+</ng-template>
+<!-- end input switch cases based on input type-->
+
+<!-- start template switch cases based on template nodeType -->
+<ng-template #templateNodeType let-nodeData let-colapsTabIndex="colapsTabIndex">
+  <ng-container [ngSwitch]="nodeData.nodeType">
+    <ng-container *ngSwitchCase="'form'">
+      <ng-container
+        *ngTemplateOutlet="formpropertyTab; context: { $implicit: nodeData, formData: nodeData, colapsTabIndex: colapsTabIndex }"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'panel'">
+      <ng-container
+        *ngTemplateOutlet="formpropertyTab; context: { $implicit: nodeData, formData: nodeData, colapsTabIndex:colapsTabIndex }"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'tab'">
+      <ng-container
+        *ngTemplateOutlet="chartPropertyTab; context: { $implicit: nodeData.tab, tabData: nodeData.tab}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'collapsetab'">
+      <ng-container
+        *ngTemplateOutlet="columnProperty; context: { $implicit: nodeData, columntab: nodeData}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'formHorizontal'">
+      <ng-container
+        *ngTemplateOutlet="chartPropertyTabHorizontal context: { $implicit: nodeData, formtab: nodeData}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'collapse'">
+      <ng-container
+        *ngTemplateOutlet="columnProperty; context: { $implicit: nodeData, formtab: nodeData}"
+      ></ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'inputs'">
+      <div
+        *ngFor="let inputData of nodeData.inputs"
+        class="{{nodeData.colClass}}"
+      >
+        <ng-container
+          *ngTemplateOutlet="formInputs context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+        ></ng-container>
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+<!-- end template switch cases based on template nodeType -->
+
+<ng-template #formpropertyTab let-formData let-colapsTabIndex="colapsTabIndex">
+  <form class="form-group-row row {{formData.form.class}}">
+    <div
+      *ngFor="let inputData of formData.form.inputs"
+      class="{{inputData.colClass}} {{formData.form.colClass}}"
+    >
+      <ng-container
+        *ngTemplateOutlet="formInputs context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #inputText let-inputData let-colapsTabIndex="colapsTabIndex">
+  <ng-container>
+  <div class="{{ inputData.class }} {{inputData.inputClass}}">
+    <div class="form-group inputtextLabel">
+      <ng-container *ngIf="colapsTabIndex >= 0">
+        <label
+          title="{{ locale[inputData.label] }}"
+          class="control-label  {{inputData.seriesSpace}} {{ inputData.isRequired }}"
+          id="{{ inputData.id + colapsTabIndex + 'label'}}">{{ locale[inputData.label] }}<span *ngIf="inputData.placeholder !== undefined" class="sr-only"
+            >{{inputData.placeholder}}</span
+          >         
+          <span class="sr-only">selectedTagListHeader</span>
+        </label>
+        <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info">
+          (
+          <a href="javascript:void(0);"
+          title="help text" 
+            class="btn-transparent infoButton"
+            attr.aria-label="{{ locale[inputData.helpText] }}"
+            aria-labelledby="helptext-text"
+          >
+            <span class="ico ico-gs-help"></span>
+        </a>
+          <a
+            href="#"
+            class="txt-help tabDescription"
+            aria-labelledby="helptext-text"
+            *ngIf="inputData.helpText !== undefined"
+            >{{ locale[inputData.helpText] }}</a
+          >
+          )
+          <div class="popover helptextpopover {{ inputData.popoverclass }}">
+            <div class="popover-header" role="region">
+              <h3 class="popover-title">{{ locale[inputData.popupTitle] }}</h3>
+            </div>
+            <div id="help-desc-text" class="popover-content">
+              <div class="popover-body">
+                <p id="helptext-text">{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph3] }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+          
+        <input
+            *ngIf="inputData.isYaxis !== 'true'"
+            type="text"
+            class="form-control"
+            id="{{ inputData.id + colapsTabIndex}}"
+            [disabled]="setReadonly(inputData, colapsTabIndex)"
+            name="{{ inputData.name }}"
+            attr.aria-label="{{locale[inputData.label] }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ locale[inputData.placeholder] }}"
+            (focusout)="setInputValue(inputData, $event, colapsTabIndex);"
+            (keyup)="onInputValueChangeHandler(inputData,$event,  colapsTabIndex)"
+            [value]="getInputValue(inputData,colapsTabIndex)"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+          />            
+          <input
+            *ngIf="inputData.isYaxis == 'true'"
+            type="text"
+            class="form-control"
+            id="{{ inputData.id + (colapsTabIndex+1)}}"
+            attr.aria-label="{{locale[inputData.label] }}"
+            [disabled]="setReadonly(inputData, (colapsTabIndex+1))"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ locale[inputData.placeholder] }}"
+            (focusout)="setInputValue(inputData, $event,(colapsTabIndex+1));"
+            (keyup)="onInputValueChangeHandler(inputData,$event,  (colapsTabIndex+1))"
+            [value]="getInputValue(inputData,(colapsTabIndex+1))"
+            attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+          />
+        <div class="alert alert-danger">
+          <span class="alert-pattern">{{ locale[inputData.alertMessage] }}</span>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="colapsTabIndex === undefined">
+        <label *ngIf="inputData.id !== 'angles'"
+          class="control-label {{inputData.angleClass}} {{ inputData.isRequired }}"
+          title="{{ locale[inputData.label] }}"
+          attr.for="{{inputData.id}}"        
+          >{{ locale[inputData.label] }}
+          <span 
+          *ngIf="inputData.subLabel !== undefined"
+          class="italicText txt-help {{ inputData.subLabelClass }}"
+        >{{ locale[inputData.subLabel] }}</span>       
+          <span *ngIf="inputData.placeholder !== undefined" class="sr-only"
+            >{{inputData.placeholder}}</span
+          >
+          <span  *ngIf="inputData.articleHeadingInfo !== undefined" class="sr-only">{{inputData.articleHeadingInfo}}</span>
+         
+        </label>
+        <label *ngIf="inputData.id === 'angles'"
+          class="control-label {{inputData.angleClass}} {{ inputData.isRequired }}"
+          title="{{ locale[inputData.label] }} {{ locale[inputData.subLabel] }}"
+          attr.for="{{inputData.id}}"        
+          >{{ locale[inputData.label] }}
+          <span 
+          *ngIf="inputData.subLabel !== undefined"
+          class="italicText txt-help {{ inputData.subLabelClass }}"
+        >{{ locale[inputData.subLabel] }}</span>       
+          <span *ngIf="inputData.placeholder !== undefined" class="sr-only"
+            >{{inputData.placeholder}}</span
+          >
+          <span  *ngIf="inputData.articleHeadingInfo !== undefined" class="sr-only">{{inputData.articleHeadingInfo}}</span>
+        </label>
+        <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info"><a href="javascript:void(0);" aria-describedby="helptext-text" title="help text" class="btn-transparent infoButton" attr.aria-label="{{ locale[inputData.helpText] }}"><span class="ico ico-gs-info"></span></a>
+          <div class="popover helptextpopover {{ inputData.popoverclass }}">
+              
+              <div id="help-desc-text" class="popover-content">
+                <div class="popover-body">
+                  <p id="helptext-text">{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                  <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+                  <p>{{ locale[inputData.popupDescriptionParagraph3] }}</p>
+                </div>
+              </div>
+            </div>
+        </div>	
+
+        <input
+          type="text"
+          class="form-control"
+          id="{{inputData.id}}"
+          [disabled]="setReadonly(inputData)"
+          [attr.title]="locale[inputData.placeholder] && locale[inputData.placeholder].length > 5 ? locale[inputData.placeholder]:''"
+          name="{{ inputData.name }}"                  
+          placeholder="{{ locale[inputData.placeholder] }}"
+          (focusout)="setInputValue(inputData, $event);"
+          (keyup)="onInputValueChangeHandler(inputData, $event)"
+          (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+          [value]="getInputValue(inputData)"          
+        />
+
+        <div class="alert alert-danger">
+          <span class="alert-pattern">{{ locale[inputData.alertMessage] }}</span>
+        </div>
+      </ng-container>
+      <em
+        class="txt-help tabDescription"
+        *ngIf="inputData.inputDescription !== undefined"
+        >{{ locale[inputData.inputDescription] }}</em
+      >
+    </div>
+  </div>
+</ng-container>
+</ng-template>
+
+<ng-template #inputcheckbox let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="{{ inputData.class }}">
+    <span
+      class="wrapperText control-label"
+      title="{{ locale[inputData.wrapperText] }}"
+    >{{ locale[inputData.wrapperText] }}</span>
+    <div class="form-group">
+      <div class="checkbox">
+        <label
+          class="control-label"
+          id="{{ inputData.id + colapsTabIndex + 'label'}}"
+        >
+          <ng-container *ngIf="colapsTabIndex >= 0">
+            <input
+              *ngIf="inputData.isYaxis !== 'true'"
+              type="checkbox"
+              class="form-controls"
+              id="{{ inputData.id + colapsTabIndex}}"
+              name="{{ inputData.name }}"
+              (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event,colapsTabIndex);"
+              (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+              [checked]="getInputValue(inputData,colapsTabIndex)"
+              title="{{locale[inputData.tooltip]}}"
+              attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+            />
+            <input
+              *ngIf="inputData.isYaxis == 'true'"
+              type="checkbox"
+              class="form-controls "
+              id="{{ inputData.id + (colapsTabIndex+1)}}"
+              name="{{ inputData.name }}"
+              (click)="setInputValue(inputData, $event,(colapsTabIndex+1));onInputValueChangeHandler(inputData, $event,(colapsTabIndex+1));"
+              [checked]="getInputValue(inputData,(colapsTabIndex+1))"
+              [disabled]=" getDisabled(inputData, (colapsTabIndex+1))"
+              attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+            />
+          </ng-container>
+          <ng-container *ngIf="colapsTabIndex === undefined">
+            <ng-container *ngIf="inputData.removeKey !== 'true'">
+              <input
+                type="checkbox"
+                class="form-controls"
+                id="{{inputData.id}}"
+                name="{{ inputData.name }}"
+                (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+                (click)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event);"
+                [checked]="getInputValue(inputData)"
+                [disabled]=" getDisabled(inputData)"
+                title="{{locale[inputData.tooltip]}}"
+                attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+              />
+            </ng-container>
+            <ng-container *ngIf="inputData.removeKey === 'true'">
+              <input
+                type="checkbox"
+                class="form-controls"
+                id="{{inputData.id}}"
+                name="{{ inputData.name }}"
+                (click)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event);"
+                (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+                [checked]="getInputValue(inputData)"
+                attr.aria-labelledby="{{ inputData.id + colapsTabIndex + 'label'}}"
+              />
+            </ng-container>
+          </ng-container>
+
+          <span
+            *ngIf="inputData.label !== ''"
+            class="wrapperTextSmall {{inputData.wrapperTextClass}}"
+            title="{{locale[inputData.label]}}"
+            >{{ locale[inputData.label] }}</span
+          >
+          <span
+            *ngIf="inputData.label == ''"
+            class="wrapperTextSmall text-transparent"
+            >empty</span
+          >
+          <em
+            class="txt-help tabDescription"
+            *ngIf="inputData.inputDescription !== undefined"
+            >{{ locale[inputData.inputDescription] }}</em
+          > </label
+        ><span
+          *ngIf="inputData.subLabel !== undefined"
+          class="italicText txt-help"
+        >{{ locale[inputData.subLabel] }}</span>
+        <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info">
+          (
+          <button
+          tabindex="-1"
+            class="btn-transparent"
+            attr.aria-label="{{ locale[inputData.helpText] }}"
+          >
+            <span class="ico ico-gs-help"></span>
+          </button>
+
+          <a
+            href="#"
+            class="txt-help tabDescription"
+            aria-labelledby="help-desc-text_2"
+            *ngIf="inputData.helpText !== undefined"
+            >{{ locale[inputData.helpText] }}</a
+          >
+          )
+          <div class="popover helptextpopover {{inputData.popupClass}}">
+            <div class="popover-header" role="region">
+              <h3 class="popover-title">{{ locale[inputData.popupTitle] }}</h3>
+            </div>
+            <div id="help-desc-text_2" class="popover-content">
+              <div class="popover-body">
+                <p>{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph3] }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="inputData.helpIcon !== undefined" class="wrap-gs-info">
+          <button
+          role="link"
+          id="helpIcon-{{ inputData.name }}"
+          class="btn-transparent txt-help tabDescription"
+          aria-labelledby="help-desc-text_helpIcon"
+          >
+            <span class="ico ico-gs-help helpIconClass"></span>
+        </button>
+        <a
+          href="#"
+          class="txt-help tabDescription"
+          aria-labelledby="help-desc-text_helpIcon"
+          *ngIf="inputData.helpIcon !== undefined"
+          ></a>
+          <div class="popover helptextpopover {{inputData.popupClass}}">
+            <div class="popover-header" role="region">
+              <h3 class="popover-title">{{ locale[inputData.popupTitle] }}</h3>
+            </div>
+            <div id="help-desc-text_helpIcon" class="popover-content">
+              <div class="popover-body">
+                <p>{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #inputtextarea let-inputData>
+  <div class="{{ inputData.class }}">
+    <span class="wrapperText">{{ locale[inputData.wrapperText] }}</span>
+    <div class="form-group">
+      <label
+        class="control-label"
+        id="{{inputData.labelid}}"
+        attr.for="{{inputData.id}}"
+        >{{ locale[inputData.label] }}<span *ngIf="inputData.placeholder !== undefined" class="sr-only"
+          >{{inputData.placeholder}}</span
+        >
+      </label>
+      <ng-container *ngIf="inputData.customModel === 'true'">
+        <textarea
+          id="{{inputData.id}}"
+          (change)="onInputValueChangeHandler(inputData, $event)"
+          class="form-control"
+          name="{{ inputData.name }}"
+          (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+        >{{getInputValue(inputData)}}</textarea
+        >
+      </ng-container>
+      <ng-container *ngIf="inputData.customModel !== 'true'">
+        <textarea
+          id="{{inputData.id}}"
+          class="form-control"
+          name="{{ inputData.name }}"
+          (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event);"
+          (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+        >{{getInputValue(inputData)}}</textarea
+        >
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #inputradio let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="{{ inputData.class }}">
+    <span *ngIf="inputData.BadgeIcon != 'true'"
+      class="control-label clear alignment_label {{inputData.labelalign}}"
+      title="{{ locale[inputData.labelalign]  }} "
+      >{{ locale[inputData.labelalign] }}</span>
+      <span *ngIf="inputData.BadgeIcon === 'true'" id="labelAlignSpan"
+      class="control-label clear alignment_label {{inputData.labelalign}}"
+      title="{{ locale[inputData.labelalign]  }} "
+      >{{ locale[inputData.labelalign] }}</span>
+    <div class="form-group {{inputData.badgeradio}}">
+      <ng-container *ngIf="colapsTabIndex >= 0">
+        <ng-container *ngIf="inputData.numberDatatype === 'true'">
+          <div class="alignment-radio-buttons">
+            <label class="control-label clear alignment_label wrap-gs-info">
+              <input
+                *ngIf="inputData.isYaxis !== 'true' && !isGrid"
+                id="{{ inputData.id + colapsTabIndex}}"
+                type="radio"
+                name="{{inputData.radioName}}"
+                (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler( inputData, $event,colapsTabIndex )"
+                [checked]="getCheckedRadio(inputData, colapsTabIndex)"
+              />
+              <input
+                *ngIf="inputData.isYaxis !== 'true'  && isGrid"
+                id="{{ inputData.id + colapsTabIndex}}"
+                type="radio"
+                name="{{inputData.radioName}}"
+                (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler( inputData, $event,colapsTabIndex )"
+                [checked]="radiostate(inputData, colapsTabIndex)"
+              />
+              <input
+                *ngIf="inputData.isYaxis == 'true'"
+                id="{{ inputData.id + (colapsTabIndex+1)}}"
+                type="radio"
+                name="{{inputData.radioName}}"
+                (click)="setInputValue(inputData, $event,(colapsTabIndex+1));onInputValueChangeHandler( inputData, $event,(colapsTabIndex+1) )"
+                [checked]="getCheckedRadio(inputData, (colapsTabIndex+1))"
+              />
+              <span
+                class="{{inputData.labelClass}}"
+                title="{{ locale[inputData.label]  }}"
+                >{{ locale[inputData.label] }}</span
+              >
+            </label>
+            <em
+              class="tooltiptext tooltip-right"
+              *ngIf="inputData.tooltipText !== undefined"
+              >{{ locale[inputData.tooltipText] }}</em
+            >
+          </div>
+        </ng-container>
+        <ng-container *ngIf="inputData.numberDatatype !== 'true'">
+          <div>
+            <span
+              class="{{inputData.spanclass}}"
+              *ngFor="let enum of inputData.enum"
+            >
+              <label
+                id="{{ enum.name + colapsTabIndex + 'label'}}"
+                class="control-label clear alignment_label {{inputData.labelClass}}"
+                title="{{ locale[enum.enumTitle] }}"
+                attr.aria-label="{{ locale[enum.enumTitle] }}"
+              >
+                <input
+                  *ngIf="inputData.isYaxis !== 'true' && !isGrid"
+                  id="align_{{enum.name+ colapsTabIndex}}"
+                  class="{{enum.class}}"
+                  type="radio"
+                  name="{{ inputData.name}}"
+                  (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event,colapsTabIndex);"
+                  [value]="enum.value"
+                  [checked]="getCheckedRadio(inputData, colapsTabIndex,enum.checked,enum.enumIndex)"
+                  title="{{ locale[enum.enumTitle] }}"
+                  attr.aria-labelledby="{{enum.name + colapsTabIndex + 'label'}}"
+                />
+                <input
+                  *ngIf="inputData.isYaxis !== 'true' && isGrid"
+                  id="align_{{enum.name+ colapsTabIndex}}"
+                  class="{{enum.class}}"
+                  type="radio"
+                  name="{{ inputData.name}}"
+                  (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event,colapsTabIndex);"
+                  [value]="enum.value"
+                  [checked]="radiostate(inputData, colapsTabIndex,enum.checked,enum.enumIndex)"
+                  title="{{ locale[enum.enumTitle] }}"
+                  attr.aria-labelledby="{{enum.name + colapsTabIndex + 'label'}}"
+                />
+
+                <input
+                  *ngIf="inputData.isYaxis == 'true'"
+                  id="align_{{enum.name+ (colapsTabIndex+1)}}"
+                  class="{{enum.class}}"
+                  type="radio"
+                  name="{{ inputData.name}}"
+                  (click)="setInputValue(inputData, $event,(colapsTabIndex+1));onInputValueChangeHandler(inputData, $event,(colapsTabIndex+1));"
+                  [value]="enum.value"
+                  [checked]="getCheckedRadio(inputData, (colapsTabIndex+1),enum.checked,enum.enumIndex)"
+                  attr.aria-labelledby="{{ enum.name + colapsTabIndex + 'label'}}"
+                />
+                <span
+                  *ngIf="inputData.radioIcon === 'true'"
+                  class="ico ico-text-{{enum.name}} text-transparent"
+                  aria-hidden="true"
+                  >empty</span
+                >
+                <span *ngIf="inputData.radioIcon === undefined" class=""
+                  >{{ locale[enum.name] }}</span
+                >
+              </label>
+            </span>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-container *ngIf="colapsTabIndex === undefined">
+        <ng-container *ngIf="inputData.nomapInput !== 'true'">
+          <ng-container *ngIf="inputData.numberDatatype === 'true'">
+            <div class="radio">
+              <label
+                class="control-label clear alignment_label wrap-gs-info "
+                title="{{ locale[inputData.label]  }}"
+              >
+                <input
+                  id="{{ inputData.id }}"
+                  type="radio"
+                  name="{{inputData.radioName}}"
+                  (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler( inputData, $event,index )"
+                  [checked]="getCheckedRadio(inputData, colapsTabIndex)"
+                  (keydown.tab)="setFocus($event,false,inputData)"
+                />
+                <span class="{{inputData.labelClass}}">{{ locale[inputData.label] }}</span>
+              </label>
+              <em
+                class="tooltiptext tooltip-right"
+                *ngIf="inputData.tooltipText !== undefined"
+                >{{ locale[inputData.tooltipText] }}</em
+              >
+            </div>
+          </ng-container>
+          <ng-container *ngIf="inputData.numberDatatype !== 'true'">
+            <span
+              class="{{enum.class}} {{inputData.spanclass}}"
+              *ngFor="let enum of inputData.enum"
+              ><label
+                for="align_{{enum.name+ inputData.name}}"
+              >
+                <input
+                *ngIf = "inputData.badgeradio == undefined"
+                id="align_{{enum.name+ inputData.name}}"
+                [value]="enum.value"
+                type="radio"
+                name="{{inputData.radioName}}"
+                (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event);"
+                (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+                [checked]="getCheckedRadio(inputData, colapsTabIndex,enum.checked,enum.enumIndex)"
+                [disabled]=" getDisabled(inputData, undefined)"
+              />
+                <input
+                *ngIf = "inputData.badgeradio == 'displayClass'"
+                  id="align_{{enum.name+ inputData.name}}"
+                  [value]="enum.value"
+                  type="radio"
+                  name="{{inputData.radioName}}"
+                  (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event);"
+                  (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+                  [checked]="getCheckedRadio(inputData, colapsTabIndex,enum.checked,enum.enumIndex)"
+                  [disabled]=" getDisabled(inputData, undefined)"
+                  aria-describedby="labelAlignSpan"
+                />
+                <span
+                  *ngIf="inputData.radioIcon === 'true'"
+                  class="ico ico-text-{{enum.name}} {{enum.enumClass}} text-transparent"
+                  aria-hidden="true"
+                  >{{ enum.name }}</span
+                >
+                <span *ngIf="inputData.BadgeIcon === 'true'" class="icon-position-radio-button {{enum.positionClass}}">
+                <span
+                class="ico text-transparent dummy_image"
+                aria-hidden="true">{{ enum.name }}</span>
+                <span class="{{enum.iconPositionSpacingClass}}">{{locale[enum.badgeIconName]}}</span>
+              </span>
+                <span
+                  *ngIf="inputData.radioIcon === 'false'"
+                  title="{{ locale[enum.name] }}"
+                  class="text-transparent"
+                  aria-hidden="true"
+                  >{{ enum.name }}</span
+                >
+                <span *ngIf="inputData.radioIcon === undefined" class=""
+                  >{{ locale[enum.name] }}</span
+                >
+                <em
+                  *ngIf="enum.inputDetails !== undefined"
+                  class="txt-help tabDescription radiotabDetails"
+                  >{{ locale[enum.inputDetails] }}</em
+                >
+              </label>
+            </span>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="inputData.nomapInput === 'true'">
+          <input
+            id="{{ inputData.id}}"
+            type="radio"
+            name="{{ inputData.name}}"
+            (click)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler( inputData, $event,index )"
+            [checked]="getCheckedRadio(inputData, colapsTabIndex,enum.checked)"
+          />
+          <label
+            class="control-label clear alignment_label {{inputData.labelClass}}"
+            >{{ locale[inputData.label] }}
+          </label>
+        </ng-container>
+      </ng-container>
+      <em
+        class="txt-help tabDescription radiotabDetails alignment-axis-label"
+        *ngIf="inputData.inputDescription !== undefined"
+        >{{ locale[inputData.inputDescription] }}</em
+      >
+    </div>
+  </div>
+</ng-template>
+<ng-template #inputselect let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="{{ inputData.class }} {{inputData.inputClass}}">
+    <div class="form-group">
+      <label
+        class="control-label"
+        id="{{inputData.id + colapsTabIndex + 'label'}}"
+        title="{{  locale[inputData.label]  }}"
+        >{{ locale[inputData.label] }}</label
+      >
+      <span *ngIf="inputData.id == 'labeltype'" data-required="true"></span>{{inputData.helpText}}
+      <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info"><a href="javascript:void(0);" title="help text" class="btn-transparent infoButton" aria-describedby="helptext-select"><span class="ico ico-gs-info"></span></a>
+        <div class="popover helptextpopover {{ inputData.popoverclass }}">              
+            <div id="help-desc-text_select" class="popover-content">
+              <div class="popover-body">
+                <p id="helptext-select">{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph3] }}</p>
+              </div>
+            </div>
+          </div>
+      </div>	
+      <ng-container *ngIf="colapsTabIndex >= 0">
+        <ng-container *ngIf="inputData.ListDatas !== 'true'">
+          <ng-container *ngIf="inputData.isYaxis == 'true'">
+            <select
+              class="form-control {{inputData.inputClass}}"
+              id="{{inputData.id + (colapsTabIndex+1)}}"
+              (change)="setInputValue(inputData, $event,(colapsTabIndex+1));onInputValueChangeHandler(inputData, $event,(colapsTabIndex+1));"
+              [value]="getInputValue(inputData, (colapsTabIndex+1))"
+              [disabled]=" getDisabled(inputData, (colapsTabIndex+1)) "
+              (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+              attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+              #selectDropdownRef
+            >
+              <option
+                selected
+                *ngIf="selectDropdownRef.value == '' ? true : false"
+                value=""
+              >
+              {{locale.selectText}}
+              </option>
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ locale[enum.value] }}</option
+              >
+            </select>
+          </ng-container>
+          <ng-container *ngIf="inputData.isYaxis !== 'true' &&  !inputData.searchable">
+            <select
+              class="form-control {{inputData.inputClass}}"
+              id="{{inputData.id + colapsTabIndex}}"
+              (change)="setInputValue(inputData, $event,colapsTabIndex);onInputValueChangeHandler(inputData, $event,colapsTabIndex);"
+              [value]="getInputValue(inputData, colapsTabIndex)"
+              [disabled]=" getDisabled(inputData, colapsTabIndex) "
+              (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+              attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+              #selectDropdownRef
+            >
+              <option
+                selected
+                *ngIf="selectDropdownRef.value == '' ? true : false"
+                value=""
+              >
+              {{locale.selectText}}
+              </option>
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ locale[enum.value] }}</option
+              >
+            </select>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="inputData.ListDatas === 'true'">
+          <ng-container *ngIf="inputData.isYaxis == 'true'">
+            <select
+              class="form-control {{inputData.inputClass}}"
+              id="{{inputData.id + (colapsTabIndex+1)}}"
+              (change)="setInputValue(inputData, $event,(colapsTabIndex+1));onInputValueChangeHandler(inputData, $event,(colapsTabIndex+1));"
+              [value]="getInputValue(inputData, (colapsTabIndex+1))"
+              attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+              #selectDropdownRef
+            >
+              <option
+                selected
+                *ngIf="selectDropdownRef.value == '' ? true : false"
+                value=""
+              >
+              {{locale.selectText}}
+              </option>
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ locale[enum.value] }}</option
+              >
+            </select>
+          </ng-container>
+          <ng-container *ngIf="inputData.isYaxis !== 'true'">
+            <select
+              class="form-control"
+              id="{{inputData.id + colapsTabIndex}}"
+              (change)="setInputValue(inputData, $event,colapsTabIndex);"
+              [value]="getInputValue(inputData, colapsTabIndex)"
+              attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+              #selectDropdownRef
+            >
+              <option
+                selected
+                *ngIf="selectDropdownRef.value == '' ? true : false"
+                value=""
+              >
+              {{locale.selectText}}
+              </option>
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ locale[enum.value] }}</option
+              >
+            </select>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+      <ng-container *ngIf="isTransformationFlag && isGridBadge && inputData.searchable">
+          <div class="{{inputData.class}} {{inputData.inputClass}}">
+          <ng-container *ngIf=" inputData.searchable && isTransformationFlag">      
+            <div class="form-group transmision-hr-dashed hr-dashed">         
+              <searchable-drop-down  
+                    class="tables-dropdown"
+                    id="{{inputData.id + colapsTabIndex}}"
+                    [dropdownData]="searchableDropDownData(inputData, colapsTabIndex )" 
+                    [selectedValue]="getSelectedOptionValue(inputData, colapsTabIndex )" 
+                    [onChangeCallback]="updateChartPropValueDataDef"
+                    [additionalInfo]="[inputData.id,colapsTabIndex,event]"
+                    [title]="getSelectedOptionValue(inputData, colapsTabIndex ) ? getSelectedOptionValue(inputData, colapsTabIndex ) : locale[inputData.label]">
+              </searchable-drop-down>
+            </div>
+          </ng-container>        
+        </div>
+      </ng-container>
+      <ng-container *ngIf="isTransformationFlag && !isGridBadge && inputData.searchable">
+        <div class="{{inputData.class}} {{inputData.inputClass}}">
+        <ng-container *ngIf=" inputData.searchable && isTransformationFlag">      
+            <div class="form-group">         
+              <searchable-drop-down  
+                    class="tables-dropdown"
+                    id="{{inputData.id + colapsTabIndex}}"
+                    [dropdownData]="searchableDropDownData(inputData, colapsTabIndex )" 
+                    [selectedValue]="getSelectedOptionValue(inputData, colapsTabIndex )" 
+                    [onChangeCallback]="updateChartPropValueDataDef"
+                    [additionalInfo]="[inputData.id,colapsTabIndex,event]"
+                    [title]="getSelectedOptionValue(inputData, colapsTabIndex ) ? getSelectedOptionValue(inputData, colapsTabIndex ) : locale[inputData.label]">
+              </searchable-drop-down>
+              </div>
+          </ng-container>        
+        </div>
+      </ng-container>      
+
+      <ng-container *ngIf="colapsTabIndex === undefined  && !inputData.searchable">
+        <ng-container *ngIf="inputData.ListDatas !== 'true'">
+          <select
+            *ngIf="inputData.name !== 'borderWidths'"
+            class="form-control"
+            id="{{inputData.id}}"
+            (change)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            [value]="getInputValue(inputData)"
+            [disabled]=" getDisabled(inputData) "
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+            #selectDropdownRef
+          >
+            <option
+              selected
+              *ngIf="selectDropdownRef.value == '' ? true : false"
+              value=""
+            >
+            {{locale.selectText}}
+            </option>
+            <ng-container *ngIf="inputData.pixelFont !== 'true'">
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ locale[enum.value] }}</option
+              >
+            </ng-container>
+            <ng-container *ngIf="inputData.pixelFont == 'true'">
+              <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+                >{{ enum.value }}</option
+              >
+            </ng-container>
+            <ng-container *ngIf="mapToBePlotDataFlag && inputData.id == 'mapToBePlotted'">
+              <option disabled>--------------------------------------------------------</option>
+              <option *ngFor="let keyofmapToBePlotData of mapToBePlotDataKeys" value="{{keyofmapToBePlotData}}" [selected]="(keyofmapToBePlotData == mapToBePlotValue) ? true : false">{{ mapToBePlotData[keyofmapToBePlotData] }}</option>
+            </ng-container>
+          </select>
+          <select
+            *ngIf="inputData.name == 'borderWidths'"
+            class="form-control"
+            id="{{inputData.id}}"
+            (change)="setBorderStyle($event,inputData.name,inputData.index)"
+            [value]="getBorderStyle(inputData.name,inputData.index)"
+            [disabled]=" getDisabled(inputData) "
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            #selectDropdownRef
+          >
+            <option
+              selected
+              *ngIf="selectDropdownRef.value == '' ? true : false"
+              value=""
+            >
+            {{locale.selectText}}
+            </option>
+            <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+              >{{ enum.value }}</option
+            >
+          </select>
+          <span
+            *ngIf="inputData.afterText !== undefined"
+            class="inputDescription"
+            >{{ locale[inputData.afterText] }}</span
+          >
+        </ng-container>
+        <ng-container *ngIf="inputData.ListDatas === 'true'">
+          <select
+            class="form-control {{inputData.inputClass}}"
+            id="{{inputData.id}}"
+            (change)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event);"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            [value]="getInputValue(inputData, colapsTabIndex)"
+            attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+            #selectDropdownRef
+          >
+            <option
+              selected
+              *ngIf="selectDropdownRef.value == '' ? true : false"
+              value=""
+            >
+            {{locale.selectText}}
+            </option>
+            <option *ngFor="let enum of inputData.enum" value="{{enum.name}}"
+              >{{ locale[enum.value] }}</option
+            >
+          </select>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #inputnumber let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="{{ inputData.class }}">
+    <div class="form-group inputNumberLabel">
+      <label
+        *ngIf="inputData.id != 'dataPointsLimit'"
+        class="control-label {{inputData.labelClass}} {{ inputData.isRequired }}"
+        id="{{inputData.id  + colapsTabIndex +'label'}}"
+        title="{{ locale[inputData.label] }}"
+        >{{ locale[inputData.label] }}
+        <span
+          *ngIf="inputData.subLabel !== undefined"
+          class="italicText txt-help"
+        >{{ locale[inputData.subLabel] }}</span>
+        <span *ngIf="inputData.placeholder !== undefined" class="sr-only"
+          >{{inputData.placeholder}}</span
+        >
+        <span
+          *ngIf="inputData.extraInputDescription !== undefined"
+          class="sr-only"
+          >{{ locale[inputData.inputDescription] }} {{ locale[inputData.extraInputDescription] }}</span
+        >
+      </label>
+      <label
+        *ngIf="inputData.id == 'dataPointsLimit' && currentWidgets.isRealTime"
+        class="control-label {{inputData.labelClass}} {{ inputData.isRequired }}"
+        id="{{inputData.id  + colapsTabIndex +'label'}}"
+        title="{{ locale[inputData.label] }}"
+        >{{ locale[inputData.label] }}</label>
+      <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info">( <button tabindex="-1" class="btn-transparent" attr.aria-label="{{ locale[inputData.helpText] }}"><span class="ico ico-gs-help"></span></button>
+        <a
+         href="#" class="txt-help tabDescription" attr.aria-describedby ="{{ inputData.helptextclass }}" title="{{ locale[inputData.helpText] }}" *ngIf="inputData.helpText !== undefined">{{ locale[inputData.helpText] }}</a> )
+          <div class="popover helptextpopover {{ inputData.popoverclass }}">
+            <div class="popover-header" role="region">
+              <h3 class="popover-title">{{ locale[inputData.popupTitle] }}</h3>
+            </div>
+            <div id="help-desc-text_number" class="popover-content">
+              <div class="popover-body">
+                <p id="{{ inputData.helptextclass }}">{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+                <p>{{ locale[inputData.popupDescriptionParagraph3] }}</p>
+              </div>
+            </div>
+          </div>
+      </div>	
+
+      <ng-container *ngIf="colapsTabIndex >= 0">
+        <ng-container *ngIf="inputData.customranges !== 'true'">
+          <input
+            *ngIf="inputData.isYaxis !== 'true'"
+            id="{{inputData.id + colapsTabIndex}}"
+            (keyup)="setInputValue(inputData, $event, colapsTabIndex)"
+            (input)="setInputValue(inputData, $event, colapsTabIndex)"
+            type="number"
+            class="form-control {{ inputData.extraClass }}"
+            min="{{inputData.min}}"
+            max="{{ inputData.max }}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ locale[inputData.placeholder] }}"
+            [value]="getInputValue(inputData, colapsTabIndex)"
+            [disabled]=" getDisabled(inputData, colapsTabIndex) "
+            attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+          />
+          <input
+            *ngIf="inputData.isYaxis == 'true'"
+            id="{{inputData.id + (colapsTabIndex+1)}}"
+            (keyup)="setInputValue(inputData, $event, (colapsTabIndex+1))"
+            (input)="setInputValue(inputData, $event, (colapsTabIndex+1))"
+            type="number"
+            class="form-control {{ inputData.extraClass }}"
+            min="{{inputData.min}}"
+            max="{{ inputData.max }}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            [value]="getInputValue(inputData, (colapsTabIndex+1))"
+            disabled="{{inputData.disabled}}"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+          />
+
+          <div
+            class="clear tabDescription"
+            *ngIf="inputData.inputDescription !== undefined"
+          >{{ locale[inputData.inputDescription] }}</div>
+        </ng-container>
+        <ng-container *ngIf="inputData.customranges === 'true'">
+          <input
+            *ngIf="inputData.isYaxis !== 'true'"
+            id="{{inputData.id + colapsTabIndex}}"
+            (keyup)="setInputValue(inputData, $event, colapsTabIndex);onInputValueChangeHandler(inputData, $event)"
+            (input)="setInputValue(inputData, $event, colapsTabIndex);onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control"
+            min="{{inputData.min}}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            disabled="{{inputData.disabled}}"
+            attr.aria-labelledby="{{inputData.id + 'label'}}"
+          />
+          <input
+            *ngIf="inputData.isYaxis == 'true'"
+            id="{{inputData.id + (colapsTabIndex+1)}}"
+            (keyup)="setInputValue(inputData, $event, (colapsTabIndex+1));onInputValueChangeHandler(inputData, $event)"
+            (input)="setInputValue(inputData, $event, (colapsTabIndex+1));onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control"
+            min="{{inputData.min}}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            disabled="{{inputData.disabled}}"
+            attr.aria-labelledby="{{inputData.id + 'label'}}"
+          />
+          <div
+            class="clear tabDescription"
+            *ngIf="inputData.inputDescription !== undefined"
+          >{{ locale[inputData.inputDescription] }}</div>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="colapsTabIndex === undefined">
+        <ng-container *ngIf="inputData.customranges !== 'true'">
+          <ng-container *ngIf="inputData.hasIcon == 'true'">
+            <span class="btn-warn">
+              <button
+                type="button"
+                class="btn-transparent"
+                attr.aria-label="{{ locale[inputData.tooltipText] }}"
+              >
+                <span class="ico ico-cm-warning "></span>
+              </button>
+              <em
+                class="tooltiptext"
+                *ngIf="inputData.tooltipText !== undefined">{{ locale[inputData.tooltipText] }}</em
+              >
+            </span>
+          </ng-container>
+          <input
+            *ngIf="inputData.id == 'rotation' && inputData.id !== 'dataPointsLimit'"
+            id="{{inputData.id}}"
+            (keyup)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control"
+            min="-360"
+            name="{{ inputData.name }}"
+            max="{{ inputData.max }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            [value]="getInputValue(inputData)"
+            disabled="{{inputData.disabled}}"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{inputData.id + 'undefinedlabel'}}"
+            title="{{inputData.title}}"
+          />
+          <input
+          *ngIf="inputData.id == 'maxDepth'"
+          id="{{inputData.id}}"
+          (keyup)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+          (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+          type="number"
+          class="form-control"
+          (keypress)="numberOnly($event)"
+          min="1"
+          step="1" pattern="\d+"
+          name="{{ inputData.name }}"
+          max="{{ inputData.max }}"
+          [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+          placeholder="{{ inputData.placeholder }}"
+          [value]="getInputValue(inputData)"
+          disabled="{{inputData.disabled}}"
+          (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+          attr.aria-labelledby="{{inputData.id + 'undefinedlabel'}}"
+          title="{{inputData.title}}"          
+        />
+        <input
+          *ngIf="inputData.id == 'hintDept'"
+          id="{{inputData.id}}"
+          (keyup)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+          (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+          type="number"
+          class="form-control"
+          (keypress)="numberOnly($event)"
+          min="0"
+          name="{{ inputData.name }}"
+          max="{{ inputData.max }}"
+          [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+          placeholder="{{ inputData.placeholder }}"
+          [value]="getInputValue(inputData)"
+          disabled="{{inputData.disabled}}"
+          (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+          attr.aria-labelledby="{{inputData.id + 'undefinedlabel'}}"
+          title="{{inputData.title}}"        
+        />
+          <input
+            *ngIf="inputData.id !== 'rotation' && inputData.id !== 'dataPointsLimit'  && inputData.id !== 'maxDepth' && inputData.id !== 'hintDept'"
+            id="{{inputData.id}}"
+            (keyup)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control {{inputData.inputClass}}"
+            min="{{inputData.min}}"
+            name="{{ inputData.name }}"
+            max="{{ inputData.max }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            [value]="getInputValue(inputData)"
+            [disabled]=" getDisabled(inputData)"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{inputData.id + 'undefinedlabel'}}"
+            title="{{inputData.title}}"
+            aria-describedby="numberInputDescription"
+          />          
+          <input
+            *ngIf="inputData.id == 'dataPointsLimit' && inputData.id !== 'rotation' && currentWidgets.isRealTime"
+            id="{{inputData.id}}"
+            (keydown)="validateNumbers($event)"
+            (keyup)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            (input)="setInputValue(inputData, $event);onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control {{ inputData.extraClass }}"
+            min="{{inputData.min}}"
+            max="{{ inputData.max }}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            [value]="getInputValue(inputData)"
+            disabled="{{inputData.disabled}}"
+            (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            attr.aria-labelledby="{{inputData.id + colapsTabIndex + 'label'}}"
+          />
+          <span
+            *ngIf="inputData.inputDescription !== undefined"
+            class="inputDescription"
+            title="{{ locale[inputData.inputDescription] }}"
+            ><span id="numberInputDescription">{{ locale[inputData.inputDescription] }}</span><em 
+            title="{{ locale[inputData.extraInputDescription] }}"
+              *ngIf="inputData.extraInputDescription !== undefined"
+              class="txt-help numberDescription">({{ locale[inputData.extraInputDescription] }})</em
+            >
+          </span>
+          <div class="alert alert-danger">
+            <span class="alert-pattern">{{ locale[inputData.alertMessageRange] }}</span>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="inputData.customranges === 'true'">
+          <input
+            (keyup)="onInputValueChangeHandler(inputData, $event)"
+            (input)="onInputValueChangeHandler(inputData, $event)"
+            type="number"
+            class="form-control"
+            min="{{inputData.min}}"
+            name="{{ inputData.name }}"
+            [attr.title]=" locale[inputData.placeholder] && locale[inputData.placeholder].length > 20 ? locale[inputData.placeholder]:''"
+            placeholder="{{ inputData.placeholder }}"
+            disabled="{{inputData.disabled}}"
+            attr.aria-labelledby="{{inputData.id + 'label'}}"
+          />
+          <span
+            *ngIf="inputData.inputDescription !== undefined"
+            class="inputDescription"
+            >{{ locale[inputData.inputDescription] }}</span
+          >
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+<ng-template #article let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="articleWrapper">
+    <strong>{{ locale[inputData.articleheading] }}</strong>
+  </div>
+  <em class="txt-help">{{ locale[inputData.articleDetails] }}</em>
+</ng-template>
+<ng-template #articleGis let-inputData let-colapsTabIndex="colapsTabIndex">
+  <div class="articleWrapper-gis">
+      <span class="article-heading-gis">{{ locale[inputData.articleheading] }}</span>
+    </div>
+    <em class="txt-help">{{ locale[inputData.articleDetails] }}</em>
+  </ng-template>
+  <ng-template #inputColor let-inputData let-colapsTabIndex="colapsTabIndex">
+      <label
+        class="control-label"
+        id="{{inputData.labelid}}"
+        title="{{ locale[inputData.label] }}"
+        >{{ locale[inputData.label] }}</label
+      >
+        <color-picker 
+        *ngIf="inputData.name !== 'borderColors'"
+        [color]="getInputValue(inputData)" 
+        [showHtmlColorPicker]="true"
+        [colorFormat]="colorFormat"
+        [UserDefinedColorRange] = "false"
+        (selectColor)="setInputValue(inputData,$event)"></color-picker>
+        <color-picker 
+        *ngIf="inputData.name == 'borderColors'"
+        [showHtmlColorPicker]="true"
+        [color]="getBorderStyle('borderColors',inputData.index)" 
+        [colorFormat]="colorFormat"
+        [UserDefinedColorRange] = "false"
+        (selectColor)="setBorderStyle($event,'borderColors',inputData.index)"></color-picker>
+      <!-- </div> -->
+    </ng-template>
+  <ng-template #inputColorLarge let-inputData let-colapsTabIndex="colapsTabIndex">
+  <label
+    class="control-label"
+    id="{{inputData.labelid}}"
+    title="{{ locale[inputData.label] }}"
+    >{{ locale[inputData.label] }}</label
+  >
+    <color-picker 
+    *ngIf="inputData.name !== 'borderColors'"
+    [color]="getInputValue(inputData)" 
+    [showHtmlColorPicker]="true"
+    [UserDefinedColorRange] = "false"
+    [colorFormat]="colorFormat"
+    (selectColor)="setInputValue(inputData,$event)"
+    class="large"></color-picker>
+    <color-picker 
+    *ngIf="inputData.name == 'borderColors'"
+    [colorWithOpacityRgba] = "getBorderStyle('borderColors',inputData.index)"
+    [color]="getBorderStyle('borderColors',inputData.index)" 
+    [colorFormat]="colorFormat"
+    (selectColor)="setBorderStyle($event,'borderColors',inputData.index)"
+    [UserDefinedColorRange] = "false"
+    class="large"></color-picker>
+  <!-- </div> -->
+</ng-template>
+<ng-template #columnProperty let-columntab>
+  <div
+    *ngIf="columntab.tabs[0].tabDescription !== undefined"
+    class="txt-help txt-help-wrapper tabDescription"
+  >
+    <!-- <img alt="Help Icon" class="ico help-txt-ico" src="/designertool/images/ico-transparent.png"> --><span
+      class="{{ columntab.tabs[0].spanClass }}"
+      >{{ locale[columntab.tabs[0].tabDescription] }}</span
+    >
+    <div class="clearfix"></div>
+  </div>
+  <div class="panel-group panel-group-info accordion">
+    <!-- <div  class="panel panel-default" *ngFor="let tab of columntab.tabs; let i = index;" [class.in]="i==0"> -->
+
+    <div
+      class="panel panel-default"
+      *ngFor="let tab of AllData[columntab.tabs[0].mapwith]; let i = index; "
+      [class.in]="i==0"
+    >
+      <!--   <div  class="panel panel-default" *ngFor="let tab of getInputValue( columntab.tabs[0].mapwith ); let i = index; " [class.in]="i==0" > -->
+      <div class="panel-heading">
+        <div class="table table-transparent form-group">
+           
+              <div class="panel-left-label">
+                <ng-container *ngIf="columntab.tabs[0].tabTitle === 'Y-AXIS' ">
+                  <ng-container *ngIf="i === 0 ">
+                    <a
+                      role="button"
+                      class="btn-transparent btn-collap-arrow"
+                      data-toggle="collapse"
+                      (click)="intiateArray()"
+                      href="#{{ columntab.tabs[0].tabTitle + i }}"
+                      data-parent="#accordion"
+                      aria-expanded="true"
+                    >
+                      <span class="toggle-arrow">
+                        <span class="txt-transparent" aria-hidden="true"
+                          >empty</span
+                        >
+                      </span>
+                      <strong>{{ locale['Default Y-Axis'] }}</strong>
+                    </a>
+                  </ng-container>
+                  <ng-container *ngIf="i === 1 ">
+                    <a
+                      role="button"
+                      class="btn-transparent btn-collap-arrow"
+                      data-toggle="collapse"
+                      (click)="intiateArray()"
+                      href="#{{ columntab.tabs[0].tabTitle + i }}"
+                      data-parent="#accordion"
+                    >
+                      <span class="toggle-arrow">
+                        <span class="txt-transparent" aria-hidden="true"
+                          >empty</span
+                        >
+                      </span>
+                      <strong>{{ locale['Right Y-Axis'] }}</strong>
+                    </a>
+                  </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="columntab.tabs[0].tabTitle !== 'Y-AXIS' ">
+                  <ng-container *ngIf="columntab.tabs[0].tabTitle === 'Plot' ">
+                    <ng-container *ngIf="i === 0 ">
+                      <a
+                        role="button"
+                        class="btn-transparent btn-collap-arrow"
+                        data-toggle="collapse"
+                        (click)="intiateArray()"
+                        href="#{{ columntab.tabs[0].tabTitle + i }}"
+                        data-parent="#accordion"
+                        aria-expanded="true"
+                      >
+                        <span class="toggle-arrow">
+                          <span class="txt-transparent">empty</span>
+                        </span>
+                        <strong>{{locale['Plot']}} <span>{{i+1}}</span> ({{locale['Default']}})</strong>
+                      </a>
+                    </ng-container>
+                    <ng-container *ngIf="i > 0  ">
+                      <a
+                        role="button"
+                        class="btn-transparent btn-collap-arrow"
+                        data-toggle="collapse"
+                        (click)="intiateArray()"
+                        href="#{{ columntab.tabs[0].tabTitle + i }}"
+                        data-parent="#accordion"
+                      >
+                        <span class="toggle-arrow">
+                          <span class="txt-transparent" aria-hidden="true"
+                            >empty</span
+                          >
+                        </span>
+                        <strong>{{locale['Plot']}} <span>{{i+1}}</span></strong>
+                      </a>
+                    </ng-container>
+                  </ng-container>
+                  <ng-container *ngIf="columntab.tabs[0].tabTitle !== 'Plot' ">
+                    <div *ngIf="isGrid == false">
+                    <a *ngIf="i == 0" role="button" class="btn-transparent btn-collap-arrow" data-toggle="collapse"
+                      (click)="intiateArray()" href="#{{ columntab.tabs[0].tabTitle + i }}" data-parent="#accordion" aria-expanded="true">
+                      <span class="toggle-arrow">
+                        <span class="txt-transparent" aria-hidden="true"
+                      >empty</span
+                      >
+                        <span class="txt-transparent" aria-hidden="true">empty</span>
+                      </span>
+                      <strong>{{ locale[columntab.tabs[0].tabTitle] }} <span>{{(i+1)}}</span></strong>
+                    </a>
+                    <a  *ngIf="i > 0" role="button" class="btn-transparent btn-collap-arrow" data-toggle="collapse" (click)="intiateArray()" href="#{{ columntab.tabs[0].tabTitle + i }}" data-parent="#accordion">
+                        <span class="toggle-arrow">
+                        <span class="txt-transparent" aria-hidden="true"
+                          >empty</span>
+                        </span>
+                          <strong>{{ locale[columntab.tabs[0].tabTitle] }} <span>{{(i+1)}}</span></strong>
+                      </a>
+                    </div>
+                    <div *ngIf="isGrid">
+                    <a *ngIf="i == 0" id="gridColumnAccordian{{(i+1)}}" role="button" class="btn-transparent btn-collap-arrow" data-toggle="collapse"
+                      (click)="intiateArray()" href="#{{ columntab.tabs[0].tabTitle + i }}" data-parent="#accordion" aria-expanded="true" attr.aria-label="{{ locale[columntab.tabs[0].tabTitle] }}{{(i+1)}}" aria-describedby="gridColumnTitle">
+                      <span class="toggle-arrow">
+                        <span class="txt-transparent">{{ locale[columntab.tabs[0].tabTitle] }}{{(i+1)}}</span>
+                      </span>
+                    </a>
+                  
+                    <span *ngIf="isGrid && i == 0" class="grid-order-button">
+                        <button type="button" id="move-up-btn-0" class="btn btn-link" (click)="moveColumnUp(i, $event);" [disabled]="i==0" title="{{ locale['Move Up'] }}" attr.aria-label="{{ locale['Move Up'] }}">
+                          <span class="ico ico-up-arrow-disable"></span>
+                        </button>
+                        <button type="button" id="move-down-btn-0" class="btn btn-link" (click)="moveColumnDown(i, $event);" [disabled] = "AllData[columntab.tabs[0].mapwith].length == 1" title="{{ locale['Move Down'] }}" attr.aria-label="{{ locale['Move Down'] }}">
+                          <span [ngClass]="(AllData[columntab.tabs[0].mapwith].length == 1) ? 'ico ico-down-arrow-disable' : 'ico ico-down-arrow'"></span>
+                        </button>
+                    </span>
+                  
+                    <a *ngIf="i == 0" class="">
+                      <strong id="gridColumnTitle">{{ locale[columntab.tabs[0].tabTitle] }} <span>{{(i+1)}}</span></strong>
+                    </a>
+                                      
+                    <a *ngIf="i > 0" id="gridColumnAccordian{{(i+1)}}" role="button" class="btn-transparent btn-collap-arrow" data-toggle="collapse"
+                      (click)="intiateArray()" href="#{{ columntab.tabs[0].tabTitle + i }}" data-parent="#accordion" attr.aria-describedby="gridColumnTitles-{{(i+1)}}" attr.aria-label="{{ locale[columntab.tabs[0].tabTitle] }}{{(i+1)}}">
+                      <span class="toggle-arrow">
+                        <span class="txt-transparent" aria-hidden="true">empty</span>
+                      </span>
+                    </a>
+                    <div *ngIf="isGrid && i > 0" class="grid-order-button">
+                      <button type="button"id="{{'move-up-btn-'+i}}" class="btn btn-link" (click)="moveColumnUp(i, $event);" title="{{ locale['Move Up'] }}" attr.aria-label="{{ locale['Move Up'] }}">
+                        <span class="ico ico-up-arrow"></span>
+                      </button>
+                      <button type="button" id="{{'move-down-btn-'+i}}" class="btn btn-link" (click)="moveColumnDown(i, $event);" title="{{ locale['Move Down'] }}" 
+                        [disabled]="i == AllData[columntab.tabs[0].mapwith].length - 1" attr.aria-label="{{ locale['Move Down'] }}">
+                        <span [ngClass]="(i == AllData[columntab.tabs[0].mapwith].length - 1) ? 'ico ico-down-arrow-disable' : 'ico ico-down-arrow'"></span>
+                      </button>
+                    </div>
+                  
+                    <a *ngIf="i > 0"  class="">
+                      <strong  id="gridColumnTitles-{{(i+1)}}">{{ locale[columntab.tabs[0].tabTitle] }} <span>{{(i+1)}}</span></strong>
+                    </a>
+                    </div>
+                  </ng-container>
+
+                </ng-container>
+              </div>
+              <div class="text-right align-middle panel-right-delete">
+                <button
+                  type="button"
+                  class="btn btn-link remove-panel deleteColumn"
+                  (click)="deleteElement(tab,i,columntab);"
+                  (keydown.tab)="setFocus($event,true)"
+                  id="{{'delete-'+i}}"
+                >
+                  <span class="ico ico-gm-delete"></span>{{ locale['Delete'] }}</button>
+              </div>
+        </div>
+
+        <!-- <div  class="panel-title">
+          <a class="title" data-toggle="collapse"  (click)="intiateArray()" href="#{{ columntab.tabs[0].tabTitle + i }}"  data-parent="#accordion">{{ columntab.tabs[0].tabTitle + (i+1) }}</a> <a class="remove-panel deleteColumn" (click)="deleteElement(tab,i,columntab);"  ><span class="ico ico-gm-delete"></span> Delete</a>
+        </div> -->
+      </div>
+
+      <div
+        attr.id="{{ columntab.tabs[0].tabTitle +i }}"
+        class="panel-collapse collapse"
+        [ngClass]="{'in': i == 0}"
+      >
+        <div class="panel-body">
+          <ng-container
+            *ngFor="let formcolumn of columntab.tabs[0].tabContent;"
+          >
+            <ng-container
+              *ngTemplateOutlet="templateNodeType; context: { $implicit: formcolumn, nodeData: formcolumn, colapsTabIndex: i }"
+            ></ng-container>
+            <!-- <ng-container *ngIf="formcolumn.nodeType == 'form'">
+              <ng-container *ngTemplateOutlet="formpropertyTab; context: { $implicit: formcolumn, colapsTabIndex: i }"></ng-container>
+            </ng-container>
+            <ng-container *ngIf="formcolumn.nodeType == 'panel'">
+              <ng-container *ngTemplateOutlet="formpropertyTab; context: { $implicit: formcolumn, colapsTabIndex: i }"></ng-container>
+            </ng-container> -->
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-wrapper">
+    <button
+      type="button"
+      (click)="addcolumnComponent(columntab); columntab.tabs.push( columntab.tabs[0].mapwith );setFocus($event,true);ExpandCollapse($event)"
+      class="btn btn-secondary add_column setFocus"
+      id="{{ 'add'+columntab.tabs[0].displayID}}"
+      (keydown.tab)="setFocusOnColorPicker($event)"
+      [disabled]="getDisabledForButton(columntab)"
+    >{{ locale[columntab.tabs[0].addButtonText] }}</button>
+  </div>
+</ng-template>
+<ng-template #component let-inputData let-colapsTabIndex="colapsTabIndex">
+  <ng-container *ngIf="inputData.selector === 'appRanges'">
+    <appRanges
+      [colapsTabIndex]="colapsTabIndex"
+      [AllData]="AllData"
+      [inputData]="inputData"
+    ></appRanges>
+  </ng-container>
+  <ng-container *ngIf="inputData.selector === 'appIcon'">
+    <appIcon [AllData]="AllData" [inputData]="inputData"></appIcon>
+  </ng-container>
+
+  <ng-container *ngIf="inputData.selector === 'appTheshold'">
+    <appTheshold
+      [colapsTabIndex]="colapsTabIndex"
+      [AllData]="AllData"
+      [inputData]="inputData"
+    ></appTheshold>
+  </ng-container>
+</ng-template>
+
+<ng-template
+  #horizontalRow
+  let-horizontalRowrowData
+  let-inputData
+  let-colapsTabIndex="colapsTabIndex"
+>
+  <div class="{{ inputData.class }}">
+    <div>
+      <label class="control-label {{ inputData.isRequired }} map-kpi-table-header" title="{{ locale[inputData.label] }}">
+        <ng-container
+          *ngIf="inputData.name === 'axisCount' || inputData.name === 'ticksandlabels' || inputData.name === 'gaugeHeading' || inputData.name === 'mapHeading'"
+        >
+          <strong>
+            <button
+              (click)="showHideElements(inputData, $event)"
+              class="btn-transparent toggle-sign"
+              (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+              attr.aria-expanded="{{inputData.expanded}}"
+            >{{ locale[inputData.label] }}</button>
+          </strong>
+        </ng-container>
+        <ng-container
+          *ngIf="inputData.name !== 'axisCount' && inputData.name !== 'ticksandlabels' && inputData.name !== 'gaugeHeading' && inputData.name !== 'mapHeading'"
+        >
+          <strong>{{ locale[inputData.label] }}</strong>
+        </ng-container>
+      </label>
+      <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info">
+        (
+        <button 
+        tabindex="-1"
+          class="btn-transparent"
+          attr.aria-label="{{ locale[inputData.helpText] }}"
+        >
+          <span class="ico ico-gs-help"></span>
+        </button>
+        <a
+          href="#"
+          attr.aria-labelledby="{{inputData.id+colapsTabIndex}}"
+          class="txt-help tabDescription"
+          *ngIf="inputData.helpText !== undefined"
+          >{{ locale[inputData.helpText] }}</a
+        >
+        )
+        <div class="popover helptextpopover {{ inputData.popoverclass }}">
+          <div class="popover-header" role="region">
+            <h3 class="popover-title">{{ locale[inputData.popupTitle] }}</h3>
+          </div>
+          <div id="{{inputData.id+colapsTabIndex}}" class="popover-content">
+            <div class="popover-body">
+              <p>{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+              <p>{{ locale[inputData.popupDescriptionParagraph2] }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #panel let-panelContentObject let-colapsTabIndex="colapsTabIndex">
+  <div class="panelwrapper {{panelContentObject.panelClass}}">
+    <span class="panelTitle" title="{{ locale[panelContentObject.panelTitle] }}"
+      >{{ locale[panelContentObject.panelTitle] }}</span
+    >
+    <div
+      *ngFor="let inputData of panelContentObject.panelContent"
+      class="{{inputData.colClass}}"
+      (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+    >
+      <ng-container
+        *ngTemplateOutlet="formInputs context: { $implicit: inputData, colapsTabIndex: colapsTabIndex}"
+      ></ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #colorRangeGis let-inputData let-colapsTabIndex="colapsTabIndex">
+    <div class="radio {{ inputData.class}}">
+      <div class=" normalFont form-group">
+        <span class="col col-md-60 normalFont customcolors"
+          >{{locale ['It is recommended to render charts as per the Dashboard Theme. If you select Custom, then the default theme colors are overwritten.']}}</span>
+      </div>
+  
+      <div class="form-group group-dotted-divider-gis level1">
+        <label
+          ><input
+            type="radio"
+            name="level1"
+            id="AsPerThemeColors"
+            [value]=""
+            [checked]="!getColorSelected()"
+            (click)="onClickDefaultColorTab($event); setcolorRangeId( 'colorRangeId','', $event )"
+            (keydown.tab)="setFocus
+  ($event,true)"
+          /><span>{{ locale['As per Theme'] }}</span></label
+        >
+      </div>
+      <div class="form-group group-dotted-divider-gis level1">
+        <label
+          ><input
+            type="radio"
+            name="level1"
+            id="CustomColors"
+            [value]=""
+            (click)="onClickCustomTab($event)"
+            [checked]="getColorSelected()"
+          />
+          <span>{{locale['Custom Colors per Level']}}</span></label
+        >
+        <ng-container *ngIf="getColorSelected()">
+            <div class="row-table-default-colorPicker range-wrapper-ele-colorPicker">
+              <div class="row-thead">
+                    <div class="col">
+                      <div class="col map-custom-color-bg" id="BgColor">{{ locale['BG'] }}</div>
+                      <div class="col map-custom-color-border" id="BorderColor">{{locale['Border']}}</div>
+                      <div class="col map-custom-color-label" id="LabelColor">{{locale['Label']}}</div>
+                    </div>
+                </div>
+        
+              <div class="row-tbody">
+                <ng-container *ngFor="let input of arrColorInput; let rowIndex = index;">
+                    <div class="col col-md-60 color-margin-bottom">
+                       <div class="col color-margin" id= "colorPicker1-{{ rowIndex }}">
+                          <color-picker class="large"
+                          [color]="getMapColorFnPlaceholderBg(rowIndex)" 
+                          [showHtmlColorPicker]="true"
+                          [colorFormat]="colorFormat"
+                          [UserDefinedColorRange] = "false"
+                          (selectColor)="setMapColorFnPlaceholderBg($event, rowIndex)"
+                          aria-labelledby="BgColor"
+                          ></color-picker>
+                        </div>
+                        <div class="col color-margin">
+                            <color-picker class="large"
+                            [showHtmlColorPicker]="true"
+                            [UserDefinedColorRange] = "false"
+                            [color]="getMapColorFnPlaceholderBorder(rowIndex)" 
+                            [colorFormat]="colorFormat"
+                            (selectColor)="setMapColorFnPlaceholderBorder($event, rowIndex)"
+                            aria-labelledby="BorderColor"
+                            ></color-picker>
+                        </div>
+                        <div class="col color-margin">
+                              <color-picker class="large"
+                              [showHtmlColorPicker]="true"
+                              [color]="getMapColorFnPlaceholderLabel(rowIndex)" 
+                              [colorFormat]="colorFormat"
+                              [UserDefinedColorRange] = "false"
+                              (selectColor)="setMapColorFnPlaceholderLabel($event, rowIndex)"
+                              aria-labelledby="LabelColor"
+                              ></color-picker>
+                        </div>
+                    <div class="col delete_icon">
+                        <div class="btn-group btn-group-default icon-border">
+                          <div class="col-btn-group">
+                          <button
+                            id="removeAddedRange-{{rowIndex}}"
+                            type="button"
+                            class="btn btn-link removeIcon"
+                            title="{{ locale['Delete'] }} "
+                            (click)="removeIcons(rowIndex); setFocusForColorDelete($event,false,rowIndex);"
+                            aria-label="Delete"
+                          >
+                            <span class="ico ico-gm-delete "></span>
+                          </button>
+                        </div>
+                        <div class="col-btn-group addRow-wrapper">
+                          <button
+                          id="addAnotherColor-{{rowIndex}}"
+                          type="button"
+                          class="btn btn-default addRange setFocus"
+                          (click)="addBackColors(rowIndex); setFocusForAddAnotherColor($event,false,rowIndex);"
+                          (keydown.tab)="setFocus($event,true)"
+                          title="{{ locale['+ Add Another'] }}"
+                        >+ {{ locale['Add for another level'] }}</button>
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>  
+            </div>
+        </ng-container>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #InfoText let-inputData let-colapsTabIndex="colapsTabIndex">
+      <p>
+        <img
+          alt="Help Icon"
+          class="ico help-txt-ico"
+          src="/designertool/images/ico-transparent.png"
+        /><span class="txt-help {{inputData.class}}"
+          >{{ locale[inputData.label] }}</span
+        >
+      </p>
+    </ng-template>
+    
+    <ng-template #heading let-inputData let-colapsTabIndex="colapsTabIndex">
+      <div class="form-group headingMargin">
+        <h6 class="{{ inputData.class }} control-label clear">{{ locale[inputData.label] }}</h6>
+      </div>
+    </ng-template>
+    <ng-template #colorPicker let-inputData let-colapsTabIndex="colapsTabIndex">
+      <color-picker
+      [showHtmlColorPicker]="true"
+      [UserDefinedColorRange] = "false"
+        (colorSelect)="handleColorSelectedEvent($event)"
+      ></color-picker>
+    </ng-template>
+          <ng-template
+      #horizontalRowKPI
+      let-horizontalRowrowData
+      let-inputData
+      let-colapsTabIndex="colapsTabIndex"
+    >
+      <div class="{{ inputData.class }}">
+        <div>
+          <label class="control-label {{ inputData.isRequired }}">
+            <ng-container
+              *ngIf="inputData.name === 'axisCount' || inputData.name === 'ticksandlabels' || inputData.name === 'gaugeHeading' || inputData.name === 'mapHeading'"
+            >
+              <strong>
+                <button
+                  (click)="showHideElements(inputData, $event)"
+                  class="btn-transparent toggle-sign"
+                  (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+                  attr.aria-expanded="{{inputData.expanded}}"
+                >{{ locale[inputData.label] }}</button>
+              </strong>
+            </ng-container>
+            <ng-container
+              *ngIf="inputData.name !== 'axisCount' && inputData.name !== 'ticksandlabels' && inputData.name !== 'gaugeHeading' && inputData.name !== 'mapHeading'"
+            >
+              <strong>{{ locale[inputData.label] }}</strong>
+            </ng-container>
+          </label>
+          <div *ngIf="inputData.helpText !== undefined" class="wrap-gs-info">
+            <a href="javascript:void(0);"                
+              class="btn-transparent infoButton setFocus"
+              attr.aria-label="{{ locale[inputData.popupDescriptionParagraph1] }}"
+              (keydown.tab)="setFocus($event,inputData.setFocusFlag,inputData)"
+            >
+              <span class="ico ico-gs-info"></span>
+          </a>            
+            <div class="popover helptextpopover {{ inputData.popoverclass }}">
+              <div id="{{inputData.id+colapsTabIndex}}" class="popover-content">
+                <div class="popover-body-gis">
+                  <p class="nomargin">{{ locale[inputData.popupDescriptionParagraph1] }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+<ng-template #colorRange let-inputData let-colapsTabIndex="colapsTabIndex">
+    <!-- <div class="color-range-default-message">{{ locale["Default Color Tab Description"] }}</div> -->
+    <div class="radio {{ inputData.class}}">
+      <div *ngIf="inputData.tagcloudHelptext === tagcloud" class=" normalFont form-group">
+        <span class="normalFont customcolors"
+          attr.aria-label="{{ locale['It is recommended to render charts as per the Dashboard Theme. If you select Custom, then the default theme colors are overwritten.'] }}"
+        >{{locale['It is recommended to render charts as per the Dashboard Theme. If you select Custom, then the default theme colors are overwritten.']}}</span>
+      </div>
+  
+      <div class="form-group group-dotted-divider-colorstab level1">
+        <label
+          ><input
+            type="radio"
+            name="level1"
+            value="as-per-theme"
+            [ngModel]="levelOneRadBtnValue"
+            (click)="handleClickOnAsPerThemeRadBtn($event); setcolorRangeId( 'colorRangeId','', $event )"
+            (keydown.tab)="setFocus($event,true)"
+            attr.aria-label="{{ locale['As per Theme - Colors'] }}"
+            [checked]="isCategoryColorAsPerTheme()" 
+            /><span>{{ locale['As per Theme - Colors'] }}</span></label
+        >
+      </div>
+      <div class="form-group group-dotted-divider-colorstab level1">
+        <label
+          ><input
+            type="radio"
+            name="level1"
+            value="custom"
+            [ngModel]="levelOneRadBtnValue"
+            (click)="handleClickOnCustomRadBtn($event)"
+            attr.aria-label="{{ locale['Custom - Colors'] }}"
+            [checked]="!isCategoryColorAsPerTheme()" 
+
+          />
+          <span>{{ locale['Custom - Colors'] }}</span></label
+        >
+  
+         <ng-container *ngIf="AllColors.name !== 'Unavailable'"> </ng-container>
+        <ng-container *ngIf="this.levelOneRadBtnValue === 'custom'">
+          <div [hidden]="levelOneRadBtnValue !== 'custom'" class="custom-colors-form custom-colors-spacing">
+
+            <div class="form-group group-dotted-divider-colorstab level2">
+              <label
+                ><input
+                  type="radio"
+                  name="level2"
+                  class="level2"
+                  value="user-defined"
+                  [ngModel]="levelTwoRadBtnValue"
+                  (click)="handleClickOnUserDefColorsRadBtn($event)"
+                  aria-describedby="userDefinedColorsSublabel"
+                  attr.aria-label="{{ locale['User Defined Colors'] }}"
+                /><span>{{ locale["User Defined Colors"] }}</span></label
+              >
+              <div class="form-group  user-defined-spacing">
+                <div [hidden]="levelTwoRadBtnValue !== 'user-defined'">
+            
+                  <div class="form-group">
+                    <span class="sublabel"
+                    id="userDefinedColorsSublabel"
+                      attr.aria-label="{{ locale['You can define maximum 10 colors'] }}"
+                    >{{ locale["You can define maximum 10 colors"] }}</span
+                    >
+                    <div class="form-group level3 define-other-custom-colors">
+                      <div class="user-defined-colors-spacing"> 
+                        <input
+                        hidden 
+                         />
+                        <color-range
+                        [colors]="defineOtherCustomColors"
+                        [maxColors]=10
+                        (selectColorRangeRgba)="selectColorRangeRgba($event)"
+                        (selectColorRangeHex)="selectColorRangeHex($event)"
+                        ></color-range>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>  
+                  
+        
+              <div class="form-group level2 let rowid=index">
+                  <label>
+                    <input
+                      type="radio"
+                      name="level2"
+                      class="level2"
+                      value="standard"
+                      [ngModel]="levelTwoRadBtnValue"
+                      (click)="handleClickOnStandardColorsRadBtn($event)"
+                      attr.aria-label="{{ locale['Standard Colors'] }}"
+                    />
+                    <span>{{ locale["Standard Colors"] }}</span>
+                  </label>
+                
+                  <div
+                    class="form-group level3"
+                    id="standardColor"
+                    [hidden]="levelTwoRadBtnValue !== 'standard'"
+                  >
+                    <div class="row setFocusColor let rowIndex=index">
+                      <div class="col-md-27 standard-color-spacing">  
+                        <div class="standard-color-Outline" *ngFor="let colorData of StandardcolorLeft; let i = index">
+                          <div class="StandardColors standardcolors-Left-Right">
+                              <label class="label-standardcolors-Left-Right">
+                            <input
+                            attr.aria-label="{{ locale[colorData.name] }}"
+                              type="radio"
+                              name="level3"
+                              class="setFocus"
+                              [value]="colorData.name"
+                              [ngModel]="levelThreeRadBtnValue"
+                              (click)="handleSelectionOfLevelThreeRadBtn(colorData.name);setcolorRangeId( 'colorRangeId',colorData.name, $event )"
+                              (keydown.tab)="setFocusColor($event, true, colorIndex + 1)"
+                            />
+                            <span class="standard-colors-span" title="{{ locale[colorData.name] }}">{{ locale[colorData.name] }}</span>
+                          </label>
+                           <div class="colorspan colors-span-spacing">
+                              <span
+                                class="color-range-span"
+                                *ngFor="let ColorDatadd of colorData.colorboxes.colors"
+                                [ngStyle]="{ 'background-color': ColorDatadd }"
+                              ></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                
+                      <div class="col-md-27 standard-color-spacing">
+                        
+                        <div  class="standard-color-Outline"
+                          *ngFor="let colorData of StandardcolorRight; let rowIndex = index"
+                        >
+                          <div class="StandardColors standardcolors-Left-Right" 
+                            ><label class="label-standardcolors-Left-Right"><input
+                              type="radio"
+                              name="level3"
+                              class="setFocus"
+                              attr.aria-label="{{ locale[colorData.name] }}"
+                              [value]="colorData.name"
+                              [ngModel]="levelThreeRadBtnValue"
+                              (click)="handleSelectionOfLevelThreeRadBtn(colorData.name);setcolorRangeId( 'colorRangeId',colorData.name, $event )"
+                              (keydown.tab)="setFocusColor($event, true, colorIndex + 1)"
+                            />
+                            <span class="standard-colors-span" title="{{ locale[colorData.name] }}">{{ locale[colorData.name] }}</span>
+                          </label>
+                            <div class="colorspan colors-span-spacing">
+                              <span
+                                class="color-range-span"
+                                *ngFor="let ColorDatadd of colorData.colorboxes.colors"
+                                [ngStyle]="{ 'background-color': ColorDatadd }"
+                              ></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                  
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  
+</ng-template>  
