@@ -1,0 +1,302 @@
+import {
+  Directive,
+  ElementRef,
+  AfterViewInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  Renderer2,
+  NgZone
+} from "@angular/core";
+import { I18n } from "@ngx-translate/i18n-polyfill";
+
+@Directive({
+  selector: "[appI18nDirective]"
+})
+export class I18nDirectiveDirective implements AfterViewInit, OnChanges {
+  public element: Element; // current element on which direvite has been applied
+  private i18nPlaceHolderId = "";
+  public i18nTextId = "";
+  private i18nToolTipId = "";
+  private pageId = "";
+  @Input() i18nParams: String;
+
+  constructor(
+    private elm: ElementRef,
+    private i18n: I18n,
+    private renderer: Renderer2,
+    private zoneService: NgZone
+  ) {
+    this.element = this.elm.nativeElement;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (
+      changes.i18nParams !== undefined &&
+      changes.i18nParams.currentValue !== undefined &&
+      changes.i18nParams.previousValue !== undefined &&
+      changes.i18nParams.previousValue !== undefined
+    ) {
+      this.cunstroctParams();
+      this.callTranslateText();
+    }
+  }
+
+  ngAfterViewInit() {
+    this.cunstroctParams();
+    this.callTranslateText();
+  }
+
+  callTranslateText() {
+    this.zoneService.runOutsideAngular(() => {
+      this.translateText();
+      setTimeout(() => {
+        this.translateText();
+      }, 500);
+    });
+  }
+
+  updateElementTextOnchange(text: string): void {
+    if (this.element !== undefined) {
+      this.element.textContent = text;
+    }
+  }
+
+  updateToolTipTextOnchange(text: string): void {
+    if (this.element !== undefined) {
+      this.element.setAttribute("title", text);
+    }
+  }
+
+  updatePlaceholderOnChange(text: string): void {
+    if (this.element !== undefined) {
+      this.element.setAttribute("placeholder", text);
+    }
+  }
+
+  // function to get the params being passed to directive by filtering the whole string.
+  // i18nParams is string Input parameter of directive which contains multiple params seperated by ';'
+  // eg. [i18nParams]="'textId= ;tooltipId=appTitleTooltip;placeHolerId=appTitlePlaceholderr'"
+  cunstroctParams() {
+    const params = this.i18nParams || "";
+    const arrParams = params.split(";");
+    if (arrParams.length > 0) {
+      let paramNode: String = "";
+      let arrParamNode: Array<string> = [];
+      for (const param in arrParams) {
+        if (arrParams[param] !== undefined) {
+          paramNode = arrParams[param] || "";
+          arrParamNode = [];
+          if (paramNode !== undefined && paramNode !== "") {
+            arrParamNode = paramNode.split("=");
+          }
+          if (arrParamNode.length > 0) {
+            switch (arrParamNode[0]) {
+              case "textId":
+                this.i18nTextId = arrParamNode[1];
+                // this.updateElementTextOnchange( arrParamNode[1] );
+                break;
+              case "tooltipId":
+                this.i18nToolTipId = arrParamNode[1];
+                // this.updateToolTipTextOnchange( arrParamNode[1] );
+                break;
+              case "placeHolerId":
+                this.i18nPlaceHolderId = arrParamNode[1];
+                // this.updatePlaceholderOnChange( arrParamNode[1] );
+                break;
+              case "pageId":
+                this.pageId = arrParamNode[1];
+                break;
+              default:
+                this.i18nTextId = arrParamNode[1];
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // function to get dashboard level locale
+  // @translationId: translationId that is used for translation key
+  getDashboardLevelLolace(translationId: string) {
+    let strDashboardLocale = "";
+    if (
+      this.pageId !== undefined &&
+      this.pageId !== "" &&
+      (<any>window).dashboardLangauges !== undefined
+    ) {
+      const dashboardLocal = (<any>window).dashboardLangauges[this.pageId];
+      if (dashboardLocal !== undefined) {
+        strDashboardLocale = dashboardLocal[translationId];
+      }
+    }
+    return strDashboardLocale;
+  }
+
+  // function to get transion from language file
+  // @translateValue: source text which is going to translate
+  // @translationId: translation id mentioned in language file to search the translation.
+  //                  translation id used for the mapping purpose.
+  getI18nTranslation(
+    translateSourceValue: string,
+    translationId: string,
+    pageId?: string
+  ): string {
+    let strTranslation = "";
+    try {
+      strTranslation = this.i18n({
+        value: translateSourceValue,
+        id: translationId
+      });
+      // console.log(`translate message found for >> ${translationId}`);
+    } catch (e) {
+      // console.error(`translate message not found for >> ${translationId}`);
+    }
+
+    if (strTranslation === undefined || strTranslation === "") {
+      strTranslation = this.getDashboardLevelLolace(translationId);
+    }
+
+    let translatedText = "";
+    if (strTranslation !== undefined && strTranslation !== "") {
+      const arrStrTranslation = strTranslation.split(/((?!^)\{.*?\})/);
+      const arrStrTranslateValue = translateSourceValue.split(/((?!^)\{.*?\})/);
+      for (const index in arrStrTranslation) {
+        if (
+          arrStrTranslation[index] !== undefined &&
+          arrStrTranslation[index] !== ""
+        ) {
+          const elmtranslation = arrStrTranslation[index];
+          const elmTranslateSource = arrStrTranslateValue[index];
+
+          // if segment of sorcevalue and translation contains curly braces then only place the parameter's values in curly braces
+          if (
+            elmtranslation !== undefined &&
+            elmTranslateSource !== undefined &&
+            elmtranslation.indexOf("{") !== -1 &&
+            elmTranslateSource.indexOf("{") !== -1
+          ) {
+            let strTranslateSource = elmTranslateSource.trim();
+            strTranslateSource = strTranslateSource.replace(/^{/, ""); // remove first curly brace
+            strTranslateSource = strTranslateSource.replace(/\}$/, ""); // remove last curly brace
+            translatedText += strTranslateSource;
+          } else {
+            if (elmtranslation === "{?}") {
+              translatedText += "";
+            } else {
+              translatedText += elmtranslation;
+            }
+          }
+        }
+      }
+    }
+
+    return translatedText === "" ? translateSourceValue : translatedText;
+  }
+
+  // function to get unique key from the text eg. 10.55.239.12 $localization.FlowCount : 4
+  // in above given example the unique key is '$localization.FlowCount'
+  // the localization value need to replace this key only
+  getUniqueKeyFromString(strKey): string {
+    const arrStringKey = strKey.split(" ");
+    let strUniqueKey = "";
+    arrStringKey.forEach(element => {
+      if (element.indexOf("$localization") !== -1) {
+        strUniqueKey = element;
+      }
+    });
+    if (strUniqueKey === "") {
+      strUniqueKey = strKey;
+    }
+    return strUniqueKey;
+  }
+
+  // function written to rplace the value against unique key eg. 10.55.239.12 $localization.FlowCount : 4
+  // in above example value will be replace at key '$localization.FlowCount'
+  getTranslationValue(
+    strI18nId: string,
+    uniqueTextId: string,
+    strVal: string
+  ): string {
+    let translatedValue = "";
+    if (strI18nId && strVal && strI18nId.trim() !== strVal.trim()) {
+      translatedValue = strI18nId.replace(uniqueTextId, strVal);
+    } else {
+      translatedValue = strI18nId;
+    }
+    return translatedValue;
+  }
+
+  // function to search the translation from language files and replace the text of appropriate attribute of the respective element.
+  translateText() {
+    // translate element text
+    if (this.i18nTextId !== undefined && this.i18nTextId !== "") {
+      const uniqueTextId = this.getUniqueKeyFromString(this.i18nTextId);
+      const textValue =
+        this.element.textContent || (<any>this.element).value || "";
+      let strTranslated = this.getI18nTranslation(textValue, uniqueTextId);
+      strTranslated = this.getTranslationValue(
+        this.i18nTextId,
+        uniqueTextId,
+        strTranslated
+      );
+      if (strTranslated !== undefined && strTranslated !== "") {
+        if (this.element.tagName.toLowerCase() === "div") {
+          this.renderer.setValue(this.element, strTranslated);
+        } else if (this.element.tagName.toLowerCase() === "input") {
+          (<any>this.element).value = strTranslated;
+          // this.renderer.setText( this.element, strTranslated );
+        } else {
+          this.element.textContent = strTranslated;
+        }
+      }
+    }
+
+    // translate title attribute of the element
+    if (this.i18nToolTipId !== undefined && this.i18nToolTipId !== "") {
+      const uniqueToolTipId = this.getUniqueKeyFromString(this.i18nToolTipId);
+      const textValue = this.element.getAttribute("title");
+      let strTranslated = this.getI18nTranslation(textValue, uniqueToolTipId);
+      strTranslated = this.getTranslationValue(
+        this.i18nToolTipId,
+        uniqueToolTipId,
+        strTranslated
+      );
+      if (strTranslated !== undefined && strTranslated !== "") {
+        this.element.setAttribute("title", strTranslated);
+      }
+    }
+
+    // translate placehoder of the element
+    if (this.i18nPlaceHolderId !== undefined && this.i18nPlaceHolderId !== "") {
+      const uniquePlaceHolderId = this.getUniqueKeyFromString(
+        this.i18nPlaceHolderId
+      );
+      const textValue = this.element.getAttribute("placeholder");
+      let strTranslated = this.getI18nTranslation(
+        textValue,
+        this.i18nPlaceHolderId
+      );
+      strTranslated = this.getTranslationValue(
+        this.i18nPlaceHolderId,
+        uniquePlaceHolderId,
+        strTranslated
+      );
+      if (strTranslated !== undefined && strTranslated !== "") {
+        this.element.setAttribute("placeholder", strTranslated);
+      }
+    }
+  }
+
+  getTranslatedValue(i18Id, strInputVal): string {
+    const uniquePlaceHolderId = this.getUniqueKeyFromString(i18Id);
+    let strTranslated = this.getI18nTranslation(strInputVal, i18Id);
+    strTranslated = this.getTranslationValue(
+      i18Id,
+      uniquePlaceHolderId,
+      strTranslated
+    );
+    return strTranslated;
+  }
+}
