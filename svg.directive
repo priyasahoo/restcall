@@ -1,0 +1,53 @@
+import { Directive, ElementRef, Input, OnInit, OnChanges } from "@angular/core";
+
+@Directive({
+  selector: "[appSvgIcon]"
+})
+export class SvgIconDirective implements OnInit, OnChanges {
+  private objHtmlSvg: Object = {};
+
+  private element: HTMLElement;
+  @Input() svgIconID: any;
+  @Input() svgHeight?: string;
+  constructor(private elm: ElementRef) {
+    this.element = elm.nativeElement;
+    this.constructHtmlForSvg();
+  }
+
+  ngOnInit() {
+    this.constructHtmlForSvg();
+    this.setSvgHtml();
+  }
+
+  private setSvgHtml() {
+    const svgHtml = this.getSvgHtml(this.svgIconID);
+    this.element.innerHTML = svgHtml;
+  }
+
+  ngOnChanges() {
+    this.setSvgHtml();
+  }
+
+  getSvgHtml(strIconName: string): string {
+    return this.objHtmlSvg[strIconName];
+  }
+
+  constructHtmlForSvg() {
+    this.objHtmlSvg["copyUrlIcon"] = `<svg version="1.1"  class="ico-svg"
+xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+y="0px" viewBox="0 0 297.6 306.9" enable-background="new 0 0 297.6 306.9" xml:space="preserve">
+<path d="M92.6,208.2c4.4,4.4,11.6,4.4,16,0l96.1-96.1c4.4-4.4,4.4-11.5,0-16c-4.4-4.4-11.6-4.4-16,0l-96.1,96.1
+C88.2,196.7,88.2,203.8,92.6,208.2L92.6,208.2z M151.1,180.3L151.1,180.3c-5.5,2.7-7.8,9.5-5,15.1c2.1,4.2,2.8,9.1,2.1,13.7
+c-0.7,4.3-2.8,8.6-6.2,12.1l-0.6,0.6l-48.1,48v0.1l0-0.1v0.1l-0.5,0.4c-4.2,4-9.7,6.1-15.3,6.1c-5.7,0-11.4-2.2-15.7-6.5h0.1L31,239
+l-0.4-0.4c-4-4.2-6-9.8-6-15.3c0-5.7,2.1-11.4,6.4-15.7h0.1l0.5-0.6l48.1-48.1v0.1c3.5-3.5,7.7-5.6,12.2-6.3c4.6-0.7,9.4,0,13.7,2.1
+c5.5,2.8,12.3,0.6,15.1-5c2.8-5.5,0.5-12.3-5-15.1c-8.5-4.3-18.1-5.6-27.4-4.2c-9,1.5-17.7,5.6-24.6,12.5h0h0l-48.1,48.1l-0.5,0.5
+l-0.1,0.1v0.1C6.4,200.4,2,211.9,2,223.3c0,11.2,4.2,22.4,12.5,31l0.6,0.6l0.1,0.1l30.7,30.8h0H46h0c8.7,8.7,20.2,13.1,31.6,13.1
+c11.2,0,22.4-4.2,31-12.5l0.7-0.6h0l0-0.1l48.1-48.1l0.6-0.5c6.9-6.9,11.1-15.5,12.5-24.6c1.5-9.2,0.1-18.9-4.2-27.3
+C163.4,179.6,156.6,177.5,151.1,180.3L151.1,180.3z M295.3,81.1L295.3,81.1c0-11.1-4.2-22.3-12.5-31l-0.6-0.6l-30.9-30.9h0
+c-8.7-8.7-20.2-13.1-31.6-13.1c-11.1,0-22.4,4.2-31,12.5l-0.6,0.5l0,0.1h0l-48.1,48l-0.6,0.6c-6.9,6.9-11,15.6-12.5,24.6
+c-1.5,9.2-0.1,18.9,4.2,27.4c2.8,5.5,9.5,7.7,15.1,4.9c5.5-2.8,7.8-9.6,5-15.1c-2.1-4.2-2.8-9-2.1-13.6c0.7-4.4,2.8-8.7,6.3-12.2
+l0.5-0.6l48.1-48h0l0-0.1l0.4-0.5c4.3-3.9,9.8-6,15.3-6c5.7,0,11.5,2.1,15.8,6.4l0,0.1l30.9,30.9l0.4,0.4c4,4.2,6,9.8,6,15.3
+c0,5.7-2.1,11.5-6.4,15.7l-0.1,0.1l-0.5,0.6l-48.1,48.1h0c-3.4,3.4-7.7,5.5-12.2,6.2c-4.6,0.8-9.4,0.1-13.6-2.1
+c-5.5-2.8-12.3-0.5-15.1,5c-2.8,5.6-0.6,12.3,5,15.1c8.5,4.2,18.1,5.7,27.3,4.2c9.1-1.4,17.7-5.6,24.6-12.5l0-0.1h0l48.1-48.1
+l0.6-0.5l0.1-0.1l-0.1-0.1h0.1C290.9,104.1,295.3,92.6,295.3,81.1L295.3,81.1z"/>
+</svg>`;
